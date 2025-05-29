@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["prismaSchemaFolder"]
+}
+
+model user {
+  id                               String                     @id @default(cuid())
+  firstname                        String?
+  lastname                         String?
+  username                         String?                    @unique
+  email                            String?                    @unique
+  email_verified                   DateTime?
+  password                         String
+  image                            String?
+  image_compressed                 String?
+  is_two_factor_enabled            Boolean?                   @default(false)
+  two_factor_confermation_code     twofactorconfermation?
+  reset_password_confermation_code resetpasswordconfermation?
+  // accounts                      Account[]
+  sessions                         session[]
+  roles                            userrole[]
+  is_admin                         Boolean                    @default(false)
+  public                           Boolean                    @default(true)
+  // Optional for WebAuthn support
+  // Authenticator                 Authenticator[]
+
+  created_at DateTime  @default(now())
+  deleted_at DateTime?
+  updated_at DateTime @updatedAt
+}
+
+// model Account {
+//   id                       String  @id @default(cuid())
+//   userId                   String  @unique
+//   type                     String
+//   provider                 String
+//   providerAccountId        String
+//   refresh_token            String? @db.Text
+//   access_token             String? @db.Text
+//   expires_at               Int?
+//   token_type               String?
+//   scope                    String?
+//   id_token                 String? @db.Text
+//   session_state            String?
+//   refresh_token_expires_in Int?
+//   user                     User?   @relation(fields: [userId], references: [id])
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   @@unique([provider, providerAccountId])
+//   @@index([userId])
+// }
+
+// Optional for WebAuthn support
+// model Authenticator {
+//   credentialID         String  @unique
+//   userId               String
+//   providerAccountId    String
+//   credentialPublicKey  String
+//   counter              Int
+//   credentialDeviceType String
+//   credentialBackedUp   Boolean
+//   transports           String?
+
+//   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+//   @@id([userId, credentialID])
+// }
