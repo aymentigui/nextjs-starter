@@ -114,7 +114,7 @@ export function DataTable({
 
     return (
         <div>
-            {showSearch && <SearchTable page={page} debouncedSearchQuery={debouncedSearchQuery} setDebouncedSearchQuery={setDebouncedSearchQuery} />}
+            {showSearch && <SearchTable setPage={setPage} page={page} debouncedSearchQuery={debouncedSearchQuery} setDebouncedSearchQuery={setDebouncedSearchQuery} />}
             {
                 isLoading
                     ?

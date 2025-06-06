@@ -51,7 +51,7 @@ const Files = () => {
       <div className='p-4'>
 
       </div>
-      <ListFilesWithPreview/> 
+      <ListFilesWithPreview notAllFile={true} allImage={true} /> 
       {/* <ListFilesForm havetype='image' filesSelected={files} setFilesSelected={setFiles} /> */}
     </Card>
   )

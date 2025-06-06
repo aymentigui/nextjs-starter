@@ -3,7 +3,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
-const SearchTable = ({ page, debouncedSearchQuery, setDebouncedSearchQuery }: any) => {
+const SearchTable = ({ setPage, page, debouncedSearchQuery, setDebouncedSearchQuery }: any) => {
     const router = useRouter();
     const pathname = usePathname(); // Utilisation de usePathname pour obtenir le chemin actuel
     const searchParams = useSearchParams(); // Utilisation de useSearchParams pour accéder aux paramètres de recherche
@@ -14,21 +14,20 @@ const SearchTable = ({ page, debouncedSearchQuery, setDebouncedSearchQuery }: an
         const handler = setTimeout(() => {
             setDebouncedSearchQuery(searchQuery);
 
-            // Manipulation des paramètres de recherche pour la pagination et la recherche
             const params = new URLSearchParams(searchParams.toString()); // Convertir les searchParams en URLSearchParams
-            params.set("page", page.toString()); // Assurez-vous d'inclure le paramètre "page"
-            if (searchQuery && searchQuery !== "") {
-                params.set("search", searchQuery); // Ajoutez le paramètre "search" si nécessaire
-            }else {
-                params.delete("search"); // Supprimez le paramètre "search" si la recherche est vide
+            if ((searchQuery && searchQuery !== "")|| (searchQuery === "" && searchParams.get("search"))) {
+                params.set("page", "1"); // Assurez-vous d'inclure le paramètre "page"
             }
-
-            // Redirection avec la nouvelle URL
+            params.set("search", searchQuery); // Ajoutez le paramètre "search" si nécessaire
+            
+            if (searchQuery==="" && searchParams.get("search")=== null || searchParams.get("search") === "") {
+                params.delete("search");  
+            }
             router.push(`${pathname}?${params.toString()}`);
-        }, 500); // Délai de 500 ms pour le debounce
+        }, 500); 
 
         return () => {
-            clearTimeout(handler); // Nettoyage du timeout pour éviter les appels multiples
+            clearTimeout(handler); 
         };
     }, [searchQuery, page, searchParams, setDebouncedSearchQuery, router, pathname]);
 

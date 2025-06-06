@@ -131,6 +131,8 @@
         "title": "Settings",
         "username": "Username",
         "change username": "Change Username",
+        "personalinfo": "Personal Information",
+        "change info": "Change personal information",
         "email": "Email",
         "emailorusername": "Email or Username",
         "change email": "Change Email",

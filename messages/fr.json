@@ -131,6 +131,8 @@
         "title": "Paramètres",
         "username": "Nom d'utilisateur",
         "change username": "Changer le nom d'utilisateur",
+        "personalinfo": "Informations personnelles",
+        "change info": "Changer les informations personnelles",
         "email": "Email",
         "emailorusername": "Email ou Nom d'utilisateur",
         "change email": "Changer l'email",

@@ -82,6 +82,43 @@ export async function updateUsername(username: string): Promise<{ status: number
     }
 }
 
+export async function updateInfo(firstname: string,lastname:string): Promise<{ status: number, data: { message: string } }> {
+    const e = await getTranslations('Error');
+    const u = await getTranslations('Users');
+    const s = await getTranslations('System');
+
+    const Scema = z.object({
+        firstname: z.string().min(1, { message: u("firstnamerequired") }),
+        lastname: z.string().min(1, { message: u("lastnamerequired") }),        
+    })
+    const session = await verifySession()
+    if (!session || session.status != 200) {
+        return { status: 401, data: { message: e("unauthorized") } };
+    }
+
+    try {
+        if (!firstname) {
+            return { status: 400, data: { message: u("firstnamerequired") } };
+        }
+        if (!lastname) {
+            return { status: 400, data: { message: u("lastnamerequired") } };
+        }
+
+        if (!Scema.safeParse({firstname,lastname}).success) {
+            return { status: 400, data: { message: u("firstnamerequired") } };
+        }
+        await prisma.user.update({
+            where: { id: session.data.user.id },
+            data: { firstname, lastname },
+        });
+
+        return { status: 200, data: { message: s("updatesuccess") } };
+    } catch (error) {
+        console.error(s("updatefail"));
+        return { status: 500, data: { message: 'An error occurred in updateUserInfo' } };
+    }
+}
+
 export async function updateTwoFactorConfermation(twoFactorConfermation: boolean): Promise<{ status: number, data: { message: string } }> {
 
     const e = await getTranslations('Error');

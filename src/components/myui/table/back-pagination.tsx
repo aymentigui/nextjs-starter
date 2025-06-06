@@ -35,7 +35,7 @@ const BackPagination = ({ page, setPage, searchQuery, isLoading, pageSize }: any
                 page === 1 ? "cursor-not-allowed" : ""
             )}
             onClick={handleBackPage}
-            disabled={page === 1 || isLoading}
+            disabled={page === 1 || page===0 || isLoading}
         >
             {s("back")}
         </Button>

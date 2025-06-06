@@ -61,7 +61,7 @@ export default function AvatarUploader({ name, image, circle = true, size, setIs
                 className="hidden"
                 onChange={handleImageChange}
               />
-              {preview && <Trash onClick={handleDeletePreview} size={1} className="h-6  w-6 p-1 rounded-lg cursor-pointer bg-red-600 hover:bg-red-300 absolute top-4 right-2 z-50" />}
+              {preview && <Trash onClick={handleDeletePreview} size={1} className="h-6  w-6 p-1 rounded-lg cursor-pointer text-white bg-red-600 hover:bg-red-300 absolute top-4 right-2 z-50" />}
               <div
                 className={cn(
                   "border flex items-center justify-center cursor-pointer relative overflow-hidden",

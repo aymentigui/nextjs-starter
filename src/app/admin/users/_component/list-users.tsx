@@ -32,30 +32,98 @@ const selectors = [
 
 export default function UsersAdminPage() {
   const translate = useTranslations("Users")
-
   const translateSystem = useTranslations("System");
   const translateErrors = useTranslations("Error")
 
   const origin = useOrigin()
   const { session } = useSession()
   const searchParams = useSearchParams();
-  const { data: sheetData, setColumns, setData: setSheetData } = useImportSheetsStore();
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [data, setData] = useState<any[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [page, setPage] = useState(searchParams.get("page") ? Number(searchParams.get("page")) : 1);
   const [pageSize, setPageSize] = useState(10);
   const [count, setCount] = useState(0);
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(""); // Etat pour la recherche avec debounce
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchParams.get("search")
+    && searchParams.get("search") !== null
+    ? String(searchParams.get("search"))
+    : "");
+
+  // --------------
+  // --------------
 
   const [open, setOpen] = useState(false); // for confirm delete
 
+  const { data: sheetData, setColumns, setData: setSheetData } = useImportSheetsStore();
   const [userSheetNotCreated, setUserSheetNotCreated] = useState<any>([])
   const [userSheetCreated, setUserSheetCreated] = useState(false)
-
-  const [data, setData] = useState<any[]>([]);
   const columnsSheet = getColumns()
+
+  // --------------
+  // --------------
+
+
+  const exportSelected = async (type: number = 1) => {
+    const res = await getUsersWithIds(selectedIds)
+    if (res.status !== 200) {
+      toast.error(translateErrors("badrequest"))
+      return
+    }
+    const users = res.data
+    generateFileClient(selectors, users, type);
+  };
+
+  const exportAll = async (type: number = 1) => {
+    const res = await getAllUsers()
+    if (res.status !== 200) {
+      toast.error(translateErrors("badrequest"))
+      return
+    }
+    const users = res.data
+    generateFileClient(selectors, users, type);
+  };
+
+  const createUsersFromSheet = async () => {
+    if (sheetData && sheetData.length > 0) {
+      try {
+        const res = await createUsers(sheetData)
+        if (res.status === 200) {
+          if (res.data.users)
+            res.data.users.forEach((user) => {
+              if (user.status !== 200)
+                setUserSheetNotCreated((prev: any) => [...prev, user.data])
+              else setUserSheetCreated(true)
+            })
+        } else toast.error(res.data.message);
+      } catch (error) {
+        toast.error(translateSystem("errorcreate"));
+      } finally {
+        setSheetData([]); // Mettre à jour le tableau avec les données créées
+      }
+    }
+  }
+
+  const fetchUsers = async () => {
+    setData([]);
+    try {
+      if (!origin) return
+      setIsLoading(true);
+      const response = await axios(origin + "/api/admin/users", { params: { page, pageSize, search: debouncedSearchQuery } });
+      if (response.status === 200) setData(response.data);
+
+      const countResponse = await axios(origin + "/api/admin/users", { params: { search: debouncedSearchQuery, count: true } });
+      if (countResponse.status === 200) setCount(countResponse.data);
+      
+    } catch (error) { console.error("Error fetching:", error); }
+    finally { setIsLoading(false); }
+  };
+
+  // -------------------
+  // -------------------
+  // -------------------
 
   useEffect(() => {
     setMounted(true);
@@ -64,83 +132,15 @@ export default function UsersAdminPage() {
 
   // pour la creation depuis les sheet
   useEffect(() => {
-    if (sheetData && sheetData.length > 0) {
-      createUsers(sheetData).then((res) => {
-        if (res.status === 200) {
-          if (res.data.users) {
-            res.data.users.forEach((user) => {
-              if (user.status !== 200) {
-                setUserSheetNotCreated((prev: any) => [...prev, user.data])
-              } else {
-                setUserSheetCreated(true)
-              }
-            })
-          }
-        } else {
-          toast.error(res.data.message);
-        }
-      }).catch((error) => {
-        toast.error(translateSystem("errorcreate"));
-      }).finally(() => {
-        setSheetData([]); // Mettre à jour le tableau avec les données créées
-      });
-    }
+    createUsersFromSheet();
   }, [sheetData]);
 
   useEffect(() => {
+    if (debouncedSearchQuery !== "" || (debouncedSearchQuery === "" && searchParams.get("search") !== null)) {
+      setPage(1)
+    }
     fetchUsers();
-  }, [page, debouncedSearchQuery, mounted, pageSize]); // Ajouter debouncedSearchQuery comme dépendance
-
-
-  const fetchUsers = async () => {
-    setData([]);
-    try {
-      if (!origin) return
-      setIsLoading(true);
-      const response = await axios(origin + "/api/admin/users", { params: { page, pageSize, search: debouncedSearchQuery } });
-      if (response.status === 200) {
-        setData(response.data);
-      }
-
-      const countResponse = await axios(origin + "/api/admin/users", { params: { search: debouncedSearchQuery, count: true } });
-      if (countResponse.status === 200) {
-        setCount(countResponse.data);
-      }
-
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const exportSelected = async (type: number = 1) => {
-
-    const res = await getUsersWithIds(selectedIds)
-
-    if (res.status !== 200) {
-      toast.error(translateErrors("badrequest"))
-      return
-    }
-
-    const users = res.data
-    generateFileClient(selectors, users, type);
-
-  };
-
-  const exportAll = async (type: number = 1) => {
-
-    const res = await getAllUsers()
-
-    if (res.status !== 200) {
-      toast.error(translateErrors("badrequest"))
-      return
-    }
-
-    const users = res.data
-    generateFileClient(selectors, users, type);
-
-  };
+  }, [page, mounted, debouncedSearchQuery, pageSize]);
 
   if (!mounted) {
     return (

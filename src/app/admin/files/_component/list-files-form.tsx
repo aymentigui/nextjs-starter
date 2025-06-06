@@ -8,11 +8,27 @@ import ListFilesWithPreview from './list-all-files-preview'
 import MyDialog from '@/components/myui/my-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
-
 import FileUploadForm from './forms/upload-files'
 
+interface ListFilesFormProps {
+    havetype?: string;
+    filesSelected: any[];
+    setFilesSelected: any;
+    multiple?: boolean;
+    acceptedFileTypes?: Record<string, string[]>;
+    notAllFiles?: boolean;
+    allImage?: boolean;
+}
+
 const ListFilesForm = (
-    { havetype, filesSelected, setFilesSelected, multiple }: { havetype?: string, filesSelected: any[], setFilesSelected: any, multiple?: boolean }
+    { havetype,
+        filesSelected,
+        setFilesSelected,
+        multiple,
+        acceptedFileTypes,
+        notAllFiles,
+        allImage
+    }: ListFilesFormProps
 ) => {
     const translate = useTranslations("Files")
     const translateSystem = useTranslations("System")
@@ -52,7 +68,7 @@ const ListFilesForm = (
                             : (
                                 <FilePreview2
                                     key={index}
-                                    file={{ fileid: file.id, filename: file.name, filetype: file.mime_type }}
+                                    file={{ fileid: file.id, filename: file.name, filetype: file.mimeType }}
                                     size='w-28 h-36'
                                     onRemove={handleDelete}
                                 />
@@ -61,7 +77,7 @@ const ListFilesForm = (
                 </div>
 
             </div>
-            {open && <MyDialog width="w-2/3" onClose={() => { setOpen(false) }}>
+            {open && <MyDialog width="w-2/3" onClose={() => setOpen(false)}>
                 <div className='max-h-[70vh]'>
                     <Tabs defaultValue="files" className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
@@ -71,14 +87,14 @@ const ListFilesForm = (
                         <TabsContent value="files" className=''>
                             <Card className='h-[63vh]  overflow-auto'>
                                 <CardContent className="space-y-2 h-full">
-                                    <ListFilesWithPreview havetype={havetype} filesSelected={filesSelected} setFilesSelected={setFilesSelected} multiple={multiple} />
+                                    <ListFilesWithPreview allImage={allImage} notAllFile={notAllFiles} havetype={havetype} filesSelected={filesSelected} setFilesSelected={setFilesSelected} multiple={multiple} />
                                 </CardContent>
                             </Card>
                         </TabsContent>
                         <TabsContent value="uploadfiles">
                             <Card className='h-[63vh]  overflow-auto'>
                                 <CardContent className="space-y-2 h-full">
-                                    <FileUploadForm showPermissions={false} />
+                                    <FileUploadForm acceptedFileTypes={acceptedFileTypes} showPermissions={false} />
                                 </CardContent>
                             </Card>
                         </TabsContent>
