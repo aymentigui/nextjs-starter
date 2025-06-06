@@ -122,50 +122,59 @@ export function DataTable({
                         <Loading />
                     </div>)
                     :
-                    <div className="rounded-md border p-2">
-                        <Table className="border">
-                            <TableHeader>
-                                {table.getHeaderGroups().map((headerGroup) => (
-                                    <TableRow key={headerGroup.id}>
-                                        {headerGroup.headers.map((header) => (
-                                            (header.id !== "actions" || hasPermissionAction)
-                                                ? <TableHead key={header.id}
-                                                    className={`
+                    <>
+                        <div>
+                            <div className="flex px-4 mb-2 border rounded-md p-2">
+                                <h2 className="text-xs font-semibold">
+                                    {s("total") + " : " + count}
+                                </h2>
+                            </div>
+                        </div>
+                        <div className="rounded-md border p-2">
+                            <Table className="border">
+                                <TableHeader>
+                                    {table.getHeaderGroups().map((headerGroup) => (
+                                        <TableRow key={headerGroup.id}>
+                                            {headerGroup.headers.map((header) => (
+                                                (header.id !== "actions" || hasPermissionAction)
+                                                    ? <TableHead key={header.id}
+                                                        className={`
                                                         ${selectedLanguage == "ar" ? "text-right " : ""} 
                                                         ${header.id === "actions" ? "w-[130px]" : ""} 
                                                         ${header.id === "description" ? "w-1/3" : ""} 
                                                     `}>
-                                                    {flexRender(
-                                                        header.column.columnDef.header,
-                                                        header.getContext()
-                                                    )}
-                                                </TableHead>
-                                                : null
-                                        ))}
-                                    </TableRow>
-                                ))}
-                            </TableHeader>
-                            <TableBody>
-                                {table.getRowModel().rows?.length ? (
-                                    table.getRowModel().rows.map((row) => (
-                                        <TableRow key={row.id}>
-                                            {row.getVisibleCells().map((cell) => (
-                                                <TableCell key={cell.id}>
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </TableCell>
+                                                        {flexRender(
+                                                            header.column.columnDef.header,
+                                                            header.getContext()
+                                                        )}
+                                                    </TableHead>
+                                                    : null
                                             ))}
                                         </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={columns.length} className="h-24 text-center">
-                                            {s("noresults")}
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                                    ))}
+                                </TableHeader>
+                                <TableBody>
+                                    {table.getRowModel().rows?.length ? (
+                                        table.getRowModel().rows.map((row) => (
+                                            <TableRow key={row.id}>
+                                                {row.getVisibleCells().map((cell) => (
+                                                    <TableCell key={cell.id}>
+                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={columns.length} className="h-24 text-center">
+                                                {s("noresults")}
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </>
             }
             {/* Pagination */}
             {!isLoading && showPagination &&

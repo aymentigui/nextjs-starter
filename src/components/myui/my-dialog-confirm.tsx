@@ -6,7 +6,7 @@ const MyDialogConfirm = ({ onConfirm, onClose, message}: any) => {
     const translate=useTranslations("System")
 
     return (
-        <div className="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
+        <div className="absolute z-50 inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
             <div className="bg-white p-6 rounded-md max-w-[400px] shadow-lg">
                 <p>{message??translate("confermationdeletemessage")}</p>
                 <div className="flex gap-4 mt-4">

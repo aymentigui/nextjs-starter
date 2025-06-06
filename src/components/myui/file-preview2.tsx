@@ -50,7 +50,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file, size = "w-40 h-48", com
                     <Button
                         type="button"
                         variant={"link"}
-                        className={"p-2 bg-red-500 z-50 text-white rounded-md hover:bg-red-600 shadow-md" + " " + (compact ? 'w-8 h-8' : 'w-3 h-3')}
+                        className={"p-2 bg-red-500 z-40 text-white rounded-md hover:bg-red-600 shadow-md" + " " + (compact ? 'w-8 h-8' : 'w-3 h-3')}
                         onClick={() => onRemove(file.fileid)}
                     >
                         <Trash2 className={compact ? '!w-8 !h-8' : '!w-3 !h-3'} />
@@ -60,7 +60,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file, size = "w-40 h-48", com
                     <Button
                         type="button"
                         variant={"link"}
-                        className={"p-2 bg-green-500 z-50 text-white rounded-md hover:bg-green-600 shadow-md" + " " + (compact ? 'w-8 h-8' : 'w-3 h-3')}
+                        className={"p-2 bg-green-500 z-40 text-white rounded-md hover:bg-green-600 shadow-md" + " " + (compact ? 'w-8 h-8' : 'w-3 h-3')}
                         onClick={() => onDownload(file.fileid)}
                     >
                         <Download className={compact ? '!w-8 !h-8' : '!w-3 !h-3'} />
@@ -70,7 +70,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file, size = "w-40 h-48", com
                     <Button
                         type="button"
                         variant={"link"}
-                        className={"p-2 bg-gray-500 z-50 text-white rounded-md hover:bg-gray-600 shadow-md" + " " + (compact ? 'w-8 h-8' : 'w-3 h-3')}
+                        className={"p-2 bg-gray-500 z-40 text-white rounded-md hover:bg-gray-600 shadow-md" + " " + (compact ? 'w-8 h-8' : 'w-3 h-3')}
                         onClick={() => onView(file.fileid)}
                     >
                         <SquareArrowOutUpRight  className={compact ? '!w-8 !h-8' : '!w-3 !h-3'} />
@@ -80,7 +80,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({ file, size = "w-40 h-48", com
                     <Button
                         type="button"
                         variant={"link"}
-                        className={"p-2 bg-orange-500 z-50 text-white rounded-md hover:bg-orange-600 shadow-md" + " " + (compact ? 'w-8 h-8' : 'w-3 h-3')}
+                        className={"p-2 bg-orange-500 z-40 text-white rounded-md hover:bg-orange-600 shadow-md" + " " + (compact ? 'w-8 h-8' : 'w-3 h-3')}
                         onClick={() => onEdit(file.fileid)}
                     >
                         <Pen className={compact ? '!w-8 !h-8' : '!w-3 !h-3'} />

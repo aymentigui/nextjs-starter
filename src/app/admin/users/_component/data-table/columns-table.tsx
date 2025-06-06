@@ -1,4 +1,5 @@
-"use client"
+"use client";
+
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Trash, ArrowUpDown, Settings2, CircleUserRound } from "lucide-react";
@@ -10,6 +11,9 @@ import axios from "axios";
 import { useOrigin } from "@/hooks/use-origin";
 import { Checkbox } from "@/components/ui/checkbox";
 import MyImage from "@/components/myui/my-image";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"; // Import du Dialog
+import { useState } from "react";
+import Loading from "@/components/myui/loading";
 
 export type Columns = {
   id: string;
@@ -24,7 +28,7 @@ export type Columns = {
 };
 
 const fitstnameHeader = (column: any) => {
-  const u = useTranslations("Users")
+  const u = useTranslations("Users");
   return (
     <Button
       variant="ghost"
@@ -38,7 +42,7 @@ const fitstnameHeader = (column: any) => {
 };
 
 const lastnameHeader = (column: any) => {
-  const u = useTranslations("Users")
+  const u = useTranslations("Users");
   return (
     <Button
       variant="ghost"
@@ -52,7 +56,7 @@ const lastnameHeader = (column: any) => {
 };
 
 const emailHeader = (column: any) => {
-  const u = useTranslations("Users")
+  const u = useTranslations("Users");
   return (
     <Button
       variant="ghost"
@@ -66,7 +70,7 @@ const emailHeader = (column: any) => {
 };
 
 const usernameHeader = (column: any) => {
-  const u = useTranslations("Users")
+  const u = useTranslations("Users");
   return (
     <Button
       variant="ghost"
@@ -80,7 +84,7 @@ const usernameHeader = (column: any) => {
 };
 
 const rolesHeader = (column: any) => {
-  const u = useTranslations("Users")
+  const u = useTranslations("Users");
   return (
     <Button
       variant="ghost"
@@ -106,7 +110,7 @@ const rolesCell = (row: any) => {
 };
 
 const imageCell = (row: any) => {
-  const preview = row.getValue("image_compressed")
+  const preview = row.getValue("image_compressed");
   return preview ? (
     <MyImage
       image={preview}
@@ -116,32 +120,83 @@ const imageCell = (row: any) => {
     />
   ) : (
     <CircleUserRound className="w-4 h-4 text-gray-500" />
-  )
-}
+  );
+};
 
 const actionsCell = (row: any) => {
   const user = row.original;
-  const origin = useOrigin()
+  const origin = useOrigin();
+  const translate= useTranslations("System");
   const { openDialog } = useAddUpdateUserDialog();
-  const { session } = useSession()
+  const { session } = useSession();
   const hasPermissionDeleteUsers = (session?.user?.permissions.find((permission: string) => permission === "users_delete") ?? false) || session?.user?.is_admin;
   const hasPermissionUpdateUsers = (session?.user?.permissions.find((permission: string) => permission === "users_update") ?? false) || session?.user?.is_admin;
 
-  const handleOpenDialogWithTitle = () => {
-    openDialog(false, row.original)
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+
+  // Fonction pour ouvrir le dialog avec l'utilisateur à supprimer
+  const handleOpenDialog = (userId: string) => {
+    setUserToDelete(userId);
+    setIsOpen(true); // Ouvrir le modal de confirmation
+  };
+
+  // Fonction de suppression après confirmation
+  const deleteUserHandler = async () => {
+    if (!userToDelete || !origin) return;
+    try {
+      setLoading(true)
+      const response = await axios.delete(`${origin}/api/admin/users/${userToDelete}`);
+      if (response.data.status === 200) {
+        toast.success(response.data.data.message);
+        window.location.reload();
+      } else {
+        toast.error(response.data.data.message);
+      }
+    } catch (error) {
+      toast.error("Une erreur s'est produite lors de la suppression.");
+    }
+    setLoading(true)
+    setIsOpen(false); // Fermer le modal après suppression
   };
 
   return (
     <div className="w-1/6 flex gap-2">
-      {hasPermissionDeleteUsers && <Button
-        onClick={() => deleteUserHandler(user.id, origin ?? "")}
-        variant="destructive"
-      >
-        <Trash />
-      </Button>}
-      {hasPermissionUpdateUsers && <Button variant={"outline"} onClick={handleOpenDialogWithTitle}>
-        <Settings2 />
-      </Button>}
+      {hasPermissionDeleteUsers && (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <Button variant="destructive" onClick={() => handleOpenDialog(user.id)}>
+              <Trash />
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent>
+            <DialogTitle>{translate("confermationdelete")}</DialogTitle>
+            <DialogDescription>
+              {translate("confermationdeletemessage")}
+            </DialogDescription>
+            <DialogFooter>
+              <Button disabled={loading} variant="outline" onClick={() => setIsOpen(false)}>
+                {translate("cancel")}
+              </Button>
+              {loading
+                ? <Button disabled variant="destructive">
+                  <Loading classSizeProps="h-4 w-4" />
+                </Button>
+                : <Button disabled={loading} variant="destructive" onClick={deleteUserHandler}>
+                  {translate("delete")}
+                </Button>}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {hasPermissionUpdateUsers && (
+        <Button variant={"outline"} onClick={() => openDialog(false, row.original)}>
+          <Settings2 />
+        </Button>
+      )}
     </div>
   );
 };
@@ -150,13 +205,12 @@ export const columns: ColumnDef<Columns>[] = [
   {
     id: "actionsCheck",
     header: ({ table }) => {
-      const allSelected = table.getIsAllRowsSelected(); // Vérifie si toutes les lignes sont sélectionnées
-
+      const allSelected = table.getIsAllRowsSelected();
       return (
         <Checkbox
           checked={allSelected}
           onCheckedChange={(value) => {
-            table.toggleAllRowsSelected(!!value); // Sélectionne ou désélectionne toutes les lignes
+            table.toggleAllRowsSelected(!!value);
           }}
         />
       );
@@ -173,7 +227,7 @@ export const columns: ColumnDef<Columns>[] = [
   {
     accessorKey: "image_compressed",
     header: "image",
-    cell: ({ row }) => (imageCell(row)),
+    cell: ({ row }) => imageCell(row),
     enableSorting: true,
   },
   {
@@ -219,29 +273,12 @@ export const columns: ColumnDef<Columns>[] = [
   {
     accessorKey: "roles",
     header: ({ column }) => rolesHeader(column),
-    cell: ({ row }) => (
-      rolesCell(row)
-    ),
+    cell: ({ row }) => rolesCell(row),
     enableSorting: true,
   },
   {
     id: "actions",
     header: "",
-    cell: ({ row }) => {
-      return actionsCell(row);
-    },
+    cell: ({ row }) => actionsCell(row),
   },
 ];
-
-const deleteUserHandler = async (userId: string, origin: string) => {
-  if (!origin) return
-  const response = await axios.delete(origin + "/api/admin/users/" + userId);
-  if (response.data.status === 200) {
-    toast.success(response.data.data.message);
-    window.location.reload()
-  } else {
-    toast.error(response.data.data.message)
-  }
-};
-
-
