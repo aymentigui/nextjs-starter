@@ -11,10 +11,10 @@ const GetImage = (id:string) => {
 
     const fetch=async ()=>{
         if(!id || id.length===0) return
-        setSrc(await getImageFromLocalHost(id)??"")
+        setSrc(await getImageFromLocalHost(id)??"no_image")
     }
 
-    if(!src)
+    if(src==="no_image")
         return "/placeholder.png"
 
     return src

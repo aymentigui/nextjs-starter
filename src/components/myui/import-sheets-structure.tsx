@@ -8,7 +8,7 @@ import { AlertCircle } from "lucide-react";
 
 interface ImportSheetsStructureProps {
   columns: ColumnCvcImport[];
-  data ?: any
+  data?: any
 }
 
 const ImportSheetsStructure: FC<ImportSheetsStructureProps> = ({ columns, data }) => {
@@ -24,10 +24,14 @@ const ImportSheetsStructure: FC<ImportSheetsStructureProps> = ({ columns, data }
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data?.map((row : any, index : number) => (
+            {data?.map((row: any, index: number) => (
               <TableRow key={index}>
                 {columns.map((col, colIndex) => (
-                  <TableCell key={colIndex}>{row[col.title]}</TableCell>
+                  <TableCell key={colIndex}>
+                    {row[col.title] instanceof Date
+                      ? row[col.title].toLocaleDateString()  // format localisé
+                      : row[col.title]}
+                  </TableCell>
                 ))}
               </TableRow>
             ))}
@@ -35,7 +39,7 @@ const ImportSheetsStructure: FC<ImportSheetsStructureProps> = ({ columns, data }
         </Table>
       </div>
 
-      {!(data.length>0) && columns.some(col => col.require?.message || col.type?.message || col.condition?.length) && (
+      {!(data.length > 0) && columns.some(col => col.require?.message || col.type?.message || col.condition?.length) && (
         <Card className="p-4">
           {columns.map((col, index) => (
             (col.require?.message || col.type?.message || col.condition?.length) && (

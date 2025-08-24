@@ -24,7 +24,7 @@ export default function AvatarUploader({ name, image, circle = true, size, setIs
     if (image)
       getImageFromLocalHost(image)
         .then((val) => {
-          setPreview(val && val !== "null" ? val : null)
+          setPreview(val)
         })
   }, [image])
 

@@ -74,9 +74,9 @@ export const getFileBlobFromLocalHost = async (idFile: string, allFile = "false"
 
 export const getImageFromLocalHost = async (idFile: string, origin = "/api/files/",) => {
     const blob = await getFileBlobFromLocalHost(idFile, "true", origin + "image/", "image");
-    if (!blob) return "null";
+    if (!blob) return null;
     const url = URL.createObjectURL(blob.blob);
-    return url ?? "null"
+    return url ?? null
 };
 
 export const getImageFileFromLocalHost = async (idFile: string, origin = "/api/files/",) => {
