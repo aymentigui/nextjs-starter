@@ -1,14 +1,14 @@
-import { AddUpdateUserDialogProvider } from '@/context/add-update-dialog-context'
-import { AddUpdateUserDialog } from '@/modals/add-update-dialog'
+// import { AddUpdateUserDialogProvider } from '@/context/add-update-dialog-context'
+// import { AddUpdateUserDialog } from '@/modals/add-update-dialog'
 import React from 'react'
 
 const ModalContext = ({ children }: { children: React.ReactNode }) => {
     return (
         <>
-            <AddUpdateUserDialogProvider>
+            {/* <exemple de contect provider> */}
                 {children}
-                <AddUpdateUserDialog />
-            </AddUpdateUserDialogProvider>
+                {/* <exemple de modal /> */}
+            {/* </exemple de contect provider> */}
         </>
     )
 }

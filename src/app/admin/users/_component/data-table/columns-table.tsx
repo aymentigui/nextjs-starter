@@ -1,3 +1,4 @@
+// src/components/columns-table.tsx
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
@@ -5,15 +6,27 @@ import { Button } from "@/components/ui/button";
 import { Trash, ArrowUpDown, Settings2, CircleUserRound } from "lucide-react";
 import { useTranslations } from "next-intl";
 import toast from "react-hot-toast";
-import { useAddUpdateUserDialog } from "@/context/add-update-dialog-context";
+// import { useAddUpdateUserDialog } from "@/context/add-update-dialog-context";
 import { useSession } from "@/hooks/use-session";
 import axios from "axios";
 import { useOrigin } from "@/hooks/use-origin";
 import { Checkbox } from "@/components/ui/checkbox";
 import MyImage from "@/components/myui/my-image";
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"; // Import du Dialog
-import { useState } from "react";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader
+} from "@/components/ui/dialog";
+import * as React from "react";
 import Loading from "@/components/myui/loading";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+
+// --- Type de données de la colonne ---
 
 export type Columns = {
   id: string;
@@ -22,263 +35,242 @@ export type Columns = {
   username: string;
   email: string;
   image: string;
-  imageCompressed: string;
+  imageCompressed: string; // Gardé pour le type, mais l'accessorKey dans la colonne est 'image_compressed'
   roles: string[];
   is_admin: boolean;
 };
 
-const fitstnameHeader = (column: any) => {
-  const u = useTranslations("Users");
-  return (
-    <Button
-      variant="ghost"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      className="flex justify-between"
-    >
-      {u("firstname")}
-      <ArrowUpDown className="ml-2 h-4 w-4" />
-    </Button>
-  );
-};
+// --- Fonctions d'En-tête (Header) avec Tri ---
 
-const lastnameHeader = (column: any) => {
-  const u = useTranslations("Users");
-  return (
-    <Button
-      variant="ghost"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      className="flex justify-between"
-    >
-      {u("lastname")}
-      <ArrowUpDown className="ml-2 h-4 w-4" />
-    </Button>
-  );
-};
+const SortableHeader = (key: keyof Columns, translateKey: string) =>
+  ({ column }: any) => {
+    const t = useTranslations("Users");
+    return (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="justify-start hover:bg-transparent px-2"
+      >
+        {t(translateKey)}
+        <ArrowUpDown className="ml-2 h-3 w-3 opacity-50" />
+      </Button>
+    );
+  };
 
-const emailHeader = (column: any) => {
-  const u = useTranslations("Users");
-  return (
-    <Button
-      variant="ghost"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      className="flex justify-between"
-    >
-      {u("email")}
-      <ArrowUpDown className="ml-2 h-4 w-4" />
-    </Button>
-  );
-};
+// --- Fonctions de Cellule (Cell) ---
 
-const usernameHeader = (column: any) => {
-  const u = useTranslations("Users");
-  return (
-    <Button
-      variant="ghost"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      className="flex justify-between"
-    >
-      {u("username")}
-      <ArrowUpDown className="ml-2 h-4 w-4" />
-    </Button>
-  );
-};
-
-const rolesHeader = (column: any) => {
-  const u = useTranslations("Users");
-  return (
-    <Button
-      variant="ghost"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      className="flex justify-between"
-    >
-      {u("roles")}
-      <ArrowUpDown className="ml-2 h-4 w-4" />
-    </Button>
-  );
-};
-
-const rolesCell = (row: any) => {
+const RolesCell = ({ row }: any) => {
   const u = useTranslations("Users");
   const roles = row.getValue("roles") as string[];
   const is_admin = row.original.is_admin as boolean;
 
   return (
-    <div className="w-4/6">
-      {is_admin ? u("isadmin") : roles.join(", ") || "No roles"}
+    <div className="font-medium text-sm">
+      {is_admin ? (
+        <span className="text-primary font-bold">{u("isadmin")} ✨</span>
+      ) : (
+        roles.length > 0 ? roles.join(", ") : <span className="text-muted-foreground">No roles</span>
+      )}
     </div>
   );
 };
 
-const imageCell = (row: any) => {
-  const preview = row.getValue("image_compressed");
+const ImageCell = ({ row }: any) => {
+  // Note: Utiliser l'accessorKey 'image_compressed' ou 'image' si l'API renvoie le champ différemment
+  console.log(row)
+  const preview =  row.original.image_compressed || row.original.image;
   return preview ? (
     <MyImage
       image={preview}
       alt="Avatar"
       load
-      classNameProps="w-4 h-4 object-cover rounded-full"
+      classNameProps="w-8 h-8 object-cover rounded-full"
     />
   ) : (
-    <CircleUserRound className="w-4 h-4 text-gray-500" />
+    <CircleUserRound className="w-8 h-8 text-gray-400" />
   );
 };
 
-const actionsCell = (row: any) => {
-  const user = row.original;
+const ActionsCell = ({ row }: any) => {
+  const user = row.original as Columns;
   const origin = useOrigin();
-  const translate= useTranslations("System");
-  const { openDialog } = useAddUpdateUserDialog();
+  const t = useTranslations("System");
+  // const { openDialog } = useAddUpdateUserDialog();
   const { session } = useSession();
-  const hasPermissionDeleteUsers = (session?.user?.permissions.find((permission: string) => permission === "users_delete") ?? false) || session?.user?.is_admin;
-  const hasPermissionUpdateUsers = (session?.user?.permissions.find((permission: string) => permission === "users_update") ?? false) || session?.user?.is_admin;
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  // Permissions (Mieux vaut les dériver dans le composant parent ou hook si possible)
+  const hasPermissionDeleteUsers = React.useMemo(() => (
+    session?.user?.is_admin ||
+    session?.user?.permissions.some((p: string) => p === "users_delete")
+  ), [session]);
 
-  // Fonction pour ouvrir le dialog avec l'utilisateur à supprimer
-  const handleOpenDialog = (userId: string) => {
-    setUserToDelete(userId);
-    setIsOpen(true); // Ouvrir le modal de confirmation
-  };
+  const hasPermissionUpdateUsers = React.useMemo(() => (
+    session?.user?.is_admin ||
+    session?.user?.permissions.some((p: string) => p === "users_update")
+  ), [session]);
 
-  // Fonction de suppression après confirmation
+
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+
+  // Fonction de suppression
   const deleteUserHandler = async () => {
-    if (!userToDelete || !origin) return;
+    if (!user.id || !origin) return;
+    setLoading(true);
     try {
-      setLoading(true)
-      const response = await axios.delete(`${origin}/api/admin/users/${userToDelete}`);
+      const response = await axios.delete(`${origin}/api/admin/users/${user.id}`);
       if (response.data.status === 200) {
-        toast.success(response.data.data.message);
+        toast.success(response.data.data.message || t("delete_success"));
+        // Reload la fenêtre ou idéalement invalider la cache/fetcher les données
         window.location.reload();
       } else {
-        toast.error(response.data.data.message);
+        toast.error(response.data.data.message || t("delete_error"));
       }
     } catch (error) {
-      toast.error("Une erreur s'est produite lors de la suppression.");
+      console.error(error);
+      toast.error(t("delete_error_generic"));
+    } finally {
+      setLoading(false);
+      setIsDialogOpen(false);
     }
-    setLoading(true)
-    setIsOpen(false); // Fermer le modal après suppression
   };
 
   return (
-    <div className="w-1/6 flex gap-2">
-      {hasPermissionDeleteUsers && (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <Button variant="destructive" onClick={() => handleOpenDialog(user.id)}>
-              <Trash />
-            </Button>
-          </DialogTrigger>
-
-          <DialogContent>
-            <DialogTitle>{translate("confermationdelete")}</DialogTitle>
-            <DialogDescription>
-              {translate("confermationdeletemessage")}
-            </DialogDescription>
-            <DialogFooter>
-              <Button disabled={loading} variant="outline" onClick={() => setIsOpen(false)}>
-                {translate("cancel")}
+    <div className="flex space-x-2">
+      {hasPermissionUpdateUsers && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => window.location.href = `/admin/users/user/${user.id}`}
+              >
+                <Settings2 className="h-4 w-4" />
               </Button>
-              {loading
-                ? <Button disabled variant="destructive">
-                  <Loading classSizeProps="h-4 w-4" />
-                </Button>
-                : <Button disabled={loading} variant="destructive" onClick={deleteUserHandler}>
-                  {translate("delete")}
-                </Button>}
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t("edit")}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+
+      {hasPermissionDeleteUsers && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <Button variant="destructive" size="icon">
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("delete")}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>{t("confermationdelete")}</DialogTitle>
+              <DialogDescription>
+                {t("confermationdeletemessage")}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="mt-4">
+              <Button
+                disabled={loading}
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                disabled={loading}
+                variant="destructive"
+                onClick={deleteUserHandler}
+              >
+                {loading ? (
+                  <>
+                    <Loading classSizeProps="h-4 w-4 mr-2" />
+                    {t("deleting")}
+                  </>
+                ) : (
+                  t("delete")
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
-
-      {hasPermissionUpdateUsers && (
-        <Button variant={"outline"} onClick={() => openDialog(false, row.original)}>
-          <Settings2 />
-        </Button>
       )}
     </div>
   );
 };
 
+// --- Définition des Colonnes (ColumnDef) ---
+
 export const columns: ColumnDef<Columns>[] = [
   {
-    id: "actionsCheck",
-    header: ({ table }) => {
-      const allSelected = table.getIsAllRowsSelected();
-      return (
-        <Checkbox
-          checked={allSelected}
-          onCheckedChange={(value) => {
-            table.toggleAllRowsSelected(!!value);
-          }}
-        />
-      );
-    },
-    cell: ({ row }) => {
-      return (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-        />
-      );
-    },
+    id: "select", // Changé à 'select' au lieu de 'actionsCheck' pour standardisation
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
+        aria-label="Select all"
+        className="translate-y-[2px]"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+        className="translate-y-[2px]"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
   },
   {
-    accessorKey: "image_compressed",
-    header: "image",
-    cell: ({ row }) => imageCell(row),
-    enableSorting: true,
+    id: "image", // ID explicite pour l'image
+    accessorKey: "image_compressed", // Utiliser l'accessorKey pour la donnée
+    header: "", // Pas de texte d'en-tête pour l'image
+    cell: (props) => ImageCell(props),
+    enableSorting: false,
+    size: 40, // Taille fixe pour l'image
   },
   {
     accessorKey: "firstname",
-    header: ({ column }) => fitstnameHeader(column),
-    cell: ({ row }) => (
-      <div className="w-4/6">
-        {row.getValue("firstname")}
-      </div>
-    ),
-    enableSorting: true,
+    header: SortableHeader("firstname", "firstname"),
   },
   {
     accessorKey: "lastname",
-    header: ({ column }) => lastnameHeader(column),
-    cell: ({ row }) => (
-      <div className="w-4/6">
-        {row.getValue("lastname")}
-      </div>
-    ),
-    enableSorting: true,
+    header: SortableHeader("lastname", "lastname"),
   },
   {
     accessorKey: "email",
-    header: ({ column }) => emailHeader(column),
-    cell: ({ row }) => (
-      <div className="w-4/6">
-        {row.getValue("email")}
-      </div>
-    ),
-    enableSorting: true,
+    header: SortableHeader("email", "email"),
   },
   {
     accessorKey: "username",
-    header: ({ column }) => usernameHeader(column),
-    cell: ({ row }) => (
-      <div className="w-4/6">
-        {row.getValue("username")}
-      </div>
-    ),
-    enableSorting: true,
+    header: SortableHeader("username", "username"),
   },
   {
     accessorKey: "roles",
-    header: ({ column }) => rolesHeader(column),
-    cell: ({ row }) => rolesCell(row),
-    enableSorting: true,
+    header: SortableHeader("roles", "roles"),
+    cell: (props) => RolesCell(props),
   },
   {
     id: "actions",
-    header: "",
-    cell: ({ row }) => actionsCell(row),
+    header: "", // L'en-tête reste vide pour les actions
+    cell: (props) => ActionsCell(props),
+    enableSorting: false,
+    size: 130, // Largeur fixe pour la colonne d'actions
   },
 ];

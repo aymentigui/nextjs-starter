@@ -12,7 +12,6 @@ datasource db {
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["prismaSchemaFolder"]
 }
 
 model user {
@@ -40,6 +39,63 @@ model user {
   deleted_at DateTime?
   updated_at DateTime @updatedAt
 }
+
+model session {
+  id           String   @id @default(cuid())
+  session_token String
+  user_id       String
+  expires      DateTime
+  user         user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  device_name   String?
+  device_type   String?
+  browser      String?
+  os           String?
+  active       Boolean  @default(true)
+  created_at    DateTime @default(now())
+}
+
+
+model role {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  permissions String
+  users       userrole[]
+  public      Boolean    @default(true)
+}
+
+model userrole {
+  id      String @id @default(cuid())
+  user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id String
+  role    role   @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  role_id String
+}
+
+model verificationtoken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String
+  expired_at DateTime
+}
+
+model twofactorconfermation {
+  id        String   @id @default(cuid())
+  user_id    String
+  expired_at DateTime
+  user      user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id])
+}
+
+model resetpasswordconfermation {
+  id        String   @id @default(cuid())
+  user_id    String
+  expired_at DateTime
+  user      user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id])
+}
+
 
 // model Account {
 //   id                       String  @id @default(cuid())
@@ -79,3 +135,30 @@ model user {
 
 //   @@id([userId, credentialID])
 // }
+
+
+model files {
+    id         String    @id @default(cuid())
+    name       String
+    mime_type  String
+    extention  String
+    size       Int
+    path       String
+    created_at DateTime  @default(now())
+    deleted_at DateTime?
+    added_from String?
+
+    can_view_permissions     String?
+    can_download_permissions String?
+    can_delete_permissions   String?
+
+    // Définition des permissions spécifiques aux utilisateurs
+    can_view_users     String?
+    can_download_users String?
+    can_delete_users   String?
+
+    // Indicateur si seul l'admin a le contrôle total
+    admin_view_only     Boolean @default(false)
+    admin_download_only Boolean @default(false)
+    admin_delete_only   Boolean @default(false)
+}

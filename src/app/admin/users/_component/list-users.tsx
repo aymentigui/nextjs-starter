@@ -217,7 +217,6 @@ export default function UsersAdminPage() {
         selectedIds={selectedIds}
         setSelectedIds={setSelectedIds}
         isLoading={isLoading}
-        setIsLoading={setIsLoading}
         debouncedSearchQuery={debouncedSearchQuery}
         setDebouncedSearchQuery={setDebouncedSearchQuery}
         page={page}

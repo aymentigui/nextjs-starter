@@ -2,6 +2,7 @@
 import { accessPage, withAuthorizationPermission, verifySession } from '@/actions/permissions'
 import UsersAdminPage from '@/app/admin/users/_component/list-users'
 import AddModalButton from '@/components/my/button/add-modal-button'
+import AddRouteButton from '@/components/my/button/add-route-button';
 import { Card } from '@/components/ui/card'
 import { useAddUpdateUserDialog } from '@/context/add-update-dialog-context';
 import React from 'react'
@@ -20,7 +21,7 @@ const UserPage = async () => {
   return (
     <Card className='p-4 w-full'>
       <div className='flex flex-col gap-2'>
-        {hasPermissionAdd.data.hasPermission && <AddModalButton translationName="Users" translationButton="adduser" useModal={useAddUpdateUserDialog} />}
+        {hasPermissionAdd.data.hasPermission && <AddRouteButton translationName="Users" translationButton="adduser" route='/admin/users/user' />}
         {/* <ListUsers /> */}
         {hasPermissionView.data.hasPermission && <UsersAdminPage />}
       </div>

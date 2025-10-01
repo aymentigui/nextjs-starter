@@ -1,17 +1,18 @@
 export const permissions = [
-    { name: "dashboard_view" },
-    { name: "users_view" },
-    { name: "users_create" },
-    { name: "users_update" },
-    { name: "users_delete" },
+  { name: "dashboard_view", group: "dashboard" },
 
-    { name: "roles_view" },
-    { name: "roles_create" },
-    { name: "roles_update" },
-    { name: "roles_delete" },   
+  { name: "users_view", group: "users" },
+  { name: "users_create", group: "users" },
+  { name: "users_update", group: "users" },
+  { name: "users_delete", group: "users" },
 
-    { name: "files_view" },
-    { name: "files_create" },
-    { name: "files_update" },
-    { name: "files_delete" },
-  ];
+  { name: "roles_view", group: "roles" },
+  { name: "roles_create", group: "roles" },
+  { name: "roles_update", group: "roles" },
+  { name: "roles_delete", group: "roles" },   
+
+  { name: "files_view", group: "files" },
+  { name: "files_create", group: "files" },
+  { name: "files_update", group: "files" },
+  { name: "files_delete", group: "files" },
+];

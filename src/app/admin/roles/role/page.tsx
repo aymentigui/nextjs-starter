@@ -1,8 +1,8 @@
 import { accessPage, verifySession } from "@/actions/permissions";
-import AddRoleForm from "@/app/admin/roles/role/_component/forms/role-form";
 import { Card } from "@/components/ui/card";
 import { permissions } from "@/db/permissions";
 import { getTranslations } from "next-intl/server";
+import AddRoleForm from "../_component/role-form";
 
 // Fonction pour récupérer les permissions (simulée)
 

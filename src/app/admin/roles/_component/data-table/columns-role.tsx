@@ -1,15 +1,28 @@
 "use client"
+import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { Settings2, Trash, ArrowUpDown } from "lucide-react";
+import { Settings2, Trash, ArrowUpDown, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
-import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useOrigin } from "@/hooks/use-origin";
 import { useSession } from "@/hooks/use-session";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader
+} from "@/components/ui/dialog";
+import { useState } from "react";
+import Loading from "@/components/myui/loading";
+
 
 export type Role = {
   id: string;
@@ -17,99 +30,177 @@ export type Role = {
   userCount: number;
 };
 
-const nameHeader = (column: any) => {
-  const r = useTranslations("Roles")
+// --- Utilities ---
+
+const SortableHeader = (key: keyof Role, translateKey: string) =>
+  ({ column }: any) => {
+    const t = useTranslations("Roles");
+    return (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="justify-start hover:bg-transparent px-2 text-sm"
+      >
+        {t(translateKey)}
+        <ArrowUpDown className="ml-2 h-3 w-3 opacity-50" />
+      </Button>
+    );
+  };
+
+const deleteRoleHandler = async (roleId: string, origin: string, t: (key: string) => string, setLoading: (loading: boolean) => void, setIsOpen: (open: boolean) => void) => {
+  if (!origin) return;
+  setLoading(true);
+  try {
+    const response = await axios.delete(origin + "/api/admin/roles/" + roleId);
+    if (response.data.status === 200) {
+      toast.success(response.data.data.message || t("delete_success"));
+      // For real-time updates without full reload, a state update or query invalidation is preferred
+      // window.location.reload(); 
+    } else {
+      toast.error(response.data.data.message || t("delete_error_generic"));
+    }
+  } catch (e: any) {
+    toast.error(e.message || t("delete_error_generic"));
+  } finally {
+    setLoading(false);
+    setIsOpen(false);
+  }
+};
+
+// --- Cell Renderers ---
+
+const UserCountCell = ({ row }: any) => {
+  const count = row.getValue("userCount") as number;
   return (
-    <Button
-      variant="ghost"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      className="w-3/6 flex justify-between"
-    >
-      {r("title")}
-      <ArrowUpDown className="ml-2 h-4 w-4" />
-    </Button>
+    <Badge variant="outline" className="text-xs font-medium bg-secondary/50 text-secondary-foreground hover:bg-secondary/70">
+      <Users className="h-3 w-3 mr-1" />
+      {count}
+    </Badge>
   );
 };
 
-const totalusersHeader = () => {
-  const r = useTranslations("Roles")
-  const [selectedLanguage, setSelectedLanguage] = useState("");
-
-  useEffect(() => {
-    setSelectedLanguage(Cookies.get('lang') || 'en')
-  }, [])
-
-  return (
-    <div className={selectedLanguage === "ar" ? "text-right" : ""}>{r("totalusers")}</div>
-  )
-}
-
-const actionsCell = (row: any) => {
-  const role = row.original;
+const ActionsCell = ({ row }: any) => {
+  const role = row.original as Role;
   const router = useRouter();
-  const { session } = useSession()
-  const hasPermissionDeleteRoles = (session?.user?.permissions.find((permission: string) => permission === "roles_delete") ?? false) || session?.user?.is_admin;
-  const hasPermissionUpdateRoles = (session?.user?.permissions.find((permission: string) => permission === "roles_update") ?? false) || session?.user?.is_admin;
-  
+  const t = useTranslations("System");
+  const { session } = useSession();
   const origin = useOrigin();
 
-  useEffect(() => {
-  }, [origin]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Permissions (Derived from session)
+  const hasPermissionDeleteRoles = React.useMemo(() => (
+    session?.user?.is_admin || session?.user?.permissions.some((p: string) => p === "roles_delete")
+  ), [session]);
+
+  const hasPermissionUpdateRoles = React.useMemo(() => (
+    session?.user?.is_admin || session?.user?.permissions.some((p: string) => p === "roles_update")
+  ), [session]);
+
+  // Handler for delete confirmation
+  const handleDelete = () => {
+    if (!origin) return;
+    deleteRoleHandler(role.id, origin, t, setLoading, setIsDialogOpen);
+  }
 
   return (
-    <div className="w-1/6 flex gap-2">
-      {hasPermissionUpdateRoles && <Button
-        onClick={() => router.push(`/admin/roles/role/${role.id}`)}
-        variant="outline"
-      >
-        <Settings2 />
-      </Button>}
-      { hasPermissionDeleteRoles && origin && <Button
-        onClick={() => deleteRoleHandler(role.id, origin)}
-        variant="destructive"
-      >
-        <Trash />
-      </Button>}
+    <div className="flex space-x-2">
+      <TooltipProvider>
+        {hasPermissionUpdateRoles && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={() => router.push(`/admin/roles/role/${role.id}`)}
+                variant="outline"
+                size="icon"
+              >
+                <Settings2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t("edit")}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {hasPermissionDeleteRoles && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("delete")}</p>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Confirmation Dialog */}
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-xl">{t("confermationdelete")}</DialogTitle>
+                <DialogDescription>
+                  {t("confermationdeletemessage")}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="mt-4 sm:justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  disabled={loading}
+                >
+                  {t("cancel")}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <Loading classSizeProps="h-4 w-4" />
+                  ) : (
+                    t("delete")
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+      </TooltipProvider>
     </div>
   );
 }
 
+// --- Column Definition Array ---
+
 export const columns: ColumnDef<Role>[] = [
   {
     accessorKey: "name",
-    header: ({ column }) => nameHeader(column),
+    header: SortableHeader("name", "title"),
     cell: ({ row }) => (
-      <div className="w-4/6">
-        {row.getValue("name")}
-      </div>
+      <div className="font-semibold text-primary">{row.getValue("name")}</div>
     ),
     enableSorting: true,
+    size: 300,
   },
   {
     accessorKey: "userCount",
-    header: totalusersHeader,
-    cell: ({ row }) => (
-      <div className="w-1/6">
-        {row.getValue("userCount")}
-      </div>
-    ),
+    header: SortableHeader("userCount", "totalusers"),
+    cell: (props) => UserCountCell(props),
+    size: 100,
   },
   {
     id: "actions",
     header: "",
-    cell: ({ row }) => { return actionsCell(row) },
+    cell: (props) => ActionsCell(props),
+    enableSorting: false,
+    size: 130, // Largeur fixe pour la colonne d'actions
   },
 ];
-
-const deleteRoleHandler = async (roleId: string, origin:string) => {
-  if(!origin) return
-  const response = await axios.delete(origin+"/api/admin/roles/" + roleId);
-  if (response.data.status === 200) {
-    toast.success(response.data.data.message);
-    window.location.reload();
-  } else {
-    toast.error(response.data.data.message)
-  }
-};
-
-

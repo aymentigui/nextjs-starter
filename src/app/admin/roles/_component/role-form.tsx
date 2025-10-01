@@ -6,13 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { Permission } from "../data-table/columns-permission";
 import { useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useOrigin } from "@/hooks/use-origin";
-import { DataTable } from "../data-table/data-table-permission";
 import Loading from "@/components/myui/loading";
+import { Permission } from "./data-table/columns-permission";
+import { DataTable } from "./data-table/data-table-permission";
 
 type AddRoleFormProps = {
   permissions: Permission[];

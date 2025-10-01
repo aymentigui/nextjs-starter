@@ -10,8 +10,8 @@
         "updatefail": "Update failed",
         "deletesuccess": "Delete success",
         "deletefail": "Delete failed",
-        "subscribesuccess" : "Subscribe/Unsubscribe success",
-        "subscribefail" : "Subscribe/Unsubscribe failed",
+        "subscribesuccess": "Subscribe/Unsubscribe success",
+        "subscribefail": "Subscribe/Unsubscribe failed",
         "create": "Create",
         "save": "Save",
         "update": "Update",
@@ -25,7 +25,7 @@
         "emailsent": "Email sent",
         "login": "Login",
         "verificationemailsent": "Verification email sent",
-        "resendthecode":"Resend the code",
+        "resendthecode": "Resend the code",
         "mustwait1minutes": "You must wait 1 minutes",
         "loginsuccess": "Login success",
         "register": "Register",
@@ -46,24 +46,22 @@
         "back": "Back",
         "pagesize": "Page size",
         "pagesizeplaceholder": "Select page size",
-        "page" : "Page",
-        "all" : "All",
-        "of" : "of",
-        "total" : "Total",
-        "selected" : "Selected",
+        "page": "Page",
+        "all": "All",
+        "of": "of",
+        "total": "Total",
+        "selected": "Selected",
         "user": "User",
         "users": "Users",
         "anonymous": "Anonymous",
         "posting": "Posting",
-        
         "image": "Image",
-        "video" : "Video",
-        "file" : "File",
-        "text" : "Text",
-        "document" : "Document",
-        "audio" : "Audio",
-        "other" : "Other",
-
+        "video": "Video",
+        "file": "File",
+        "text": "Text",
+        "document": "Document",
+        "audio": "Audio",
+        "other": "Other",
         "number": "Number",
         "date": "Date",
         "time": "Time",
@@ -91,7 +89,6 @@
         "mustrefreshtoseedata": "Please refresh the page to see the new data.",
         "downloadjustselected": "Download just selected",
         "count": "Count",
-
         "confermationdelete": "Are you absolutely sure?",
         "confermationdeletemessage": "This action cannot be undone. This will permanently delete your data and remove your data from our servers."
     },
@@ -127,7 +124,7 @@
         "badrequest": "Bad request",
         "errorscreating": "Error creating"
     },
-   "Settings": {
+    "Settings": {
         "title": "Settings",
         "username": "Username",
         "change username": "Change Username",
@@ -216,29 +213,35 @@
         "avatarinvalid": "Avatar is invalid",
         "imagerequired": "Image is required",
         "onlyimagesallowed": "Only images are allowed",
-
         "selectusers": "Select users",
         "deleteusers": "Delete users",
-        "confermationdelete" : "Are you absolutely sure?",
-        "confermationdeletemessage" : "This action cannot be undone. This will permanently delete your users and remove your data from our servers."
+        "confermationdelete": "Are you absolutely sure?",
+        "confermationdeletemessage": "This action cannot be undone. This will permanently delete your users and remove your data from our servers."
     },
     "Permissions": {
         "title": "Permissions",
+        "dashboard": "Dashboard",
         "dashboard_view": "Dashboard View",
+
+        "users": "Users",
         "users_view": "Users View",
         "users_create": "Users Create",
         "users_update": "Users Update",
         "users_delete": "Users Delete",
+
+        "roles": "Roles",
         "roles_view": "Roles View",
         "roles_create": "Roles Create",
         "roles_update": "Roles Update",
         "roles_delete": "Roles Delete",
+
+        "files": "Files",
         "files_view": "Files View",
         "files_create": "Files Create",
         "files_update": "Files Update",
         "files_delete": "Files Delete"
     },
-   "Files": {
+    "Files": {
         "title": "Files",
         "uploadfile": "Upload File",
         "deletefile": "Delete File",
@@ -260,20 +263,18 @@
         "selectoneormorefiles": "Select one or more files to upload.",
         "selectonefile": "Select one file to upload.",
         "selectfilesheet": "Select file sheet",
-
         "filespermission": "Files Permission",
         "public": "Public",
         "allusers": "All Users",
-        "viewpermissions" : "Who can view files",
-        "downloadpermissions" : "Who can download files",
-        "deletepermissions" : "Who can delete files",
+        "viewpermissions": "Who can view files",
+        "downloadpermissions": "Who can download files",
+        "deletepermissions": "Who can delete files",
         "havepermission": "Who have permission",
         "users": "Users",
         "justme": "Just me",
-
         "confermationdeletemessage": "This action cannot be undone. This will permanently delete your file and remove your data from our servers."
     },
-    "Header":{
+    "Header": {
         "home": "Home",
         "settings": "Settings",
         "aboutus": "About me",
@@ -283,7 +284,7 @@
         "register": "Register",
         "dashboard": "Dashboard"
     },
-    "Blogs":{
+    "Blogs": {
         "title": "Blogs",
         "addblog": "Add Blog",
         "updateblog": "Update Blog",
@@ -295,10 +296,10 @@
         "draft": "Draft",
         "blognotfound": "Blog not found"
     },
-    "TextEditor":{
+    "TextEditor": {
         "placeholder": "Write something..."
     },
-    "sheet":{
+    "sheet": {
         "title": "Sheet",
         "addsheet": "Add Sheet",
         "updatesheet": "Update Sheet",
@@ -309,7 +310,6 @@
         "publish": "Publish",
         "draft": "Draft",
         "sheetnotfound": "Sheet not found",
-
         "required": "This field is required",
         "invalidemail": "This field must be an email",
         "invalidphone": "This field must be a phone number",

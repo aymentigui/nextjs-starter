@@ -83,22 +83,27 @@ export async function haveSession() {
 //----------------------------------------------
 
 export async function accessPage(requiredPermission: string[], id?: string) {
-    let userId = id;
-    if (!userId) {
-        const session = await verifySession();
-        if (session.status !== 200 || !session.data || !session.data.user || !session.data.user.id) {
+    try {
+        let userId = id;
+        if (!userId) {
+            const session = await verifySession();
+            if (session.status !== 200 || !session.data || !session.data.user || !session.data.user.id) {
+                return redirect('/');
+            }
+            userId = session.data.user.id as string;
+        }
+
+        const hasPermission = await withAuthorizationPermission(requiredPermission, false, userId);
+
+        if (hasPermission.status !== 200 || !hasPermission.data || !hasPermission.data.hasPermission) {
             return redirect('/admin');
         }
-        userId = session.data.user.id as string;
+
+        return true;
+    } catch (error) {
+        console.error("An error occurred in accessPage");
+        return redirect('/');
     }
-
-    const hasPermission = await withAuthorizationPermission(requiredPermission, false, userId);
-
-    if (hasPermission.status !== 200 || !hasPermission.data || !hasPermission.data.hasPermission) {
-        return redirect('/admin');
-    }
-
-    return true;
 }
 
 
@@ -165,8 +170,8 @@ export async function withAuthorizationPermission(
 ) {
     const e = await getTranslations('Error');
     try {
-        let userId=id;
-        if(!userId){
+        let userId = id;
+        if (!userId) {
             const session = await verifySession();
             if (session.status !== 200 || !session.data || !session.data.user || !session.data.user.id) {
                 return { status: 401, data: { message: e("unauthorized") } };
@@ -204,8 +209,8 @@ export async function withAuthorizationRole(
 ) {
     const e = await getTranslations('Error');
     try {
-        let userId=id;
-        if(!userId){
+        let userId = id;
+        if (!userId) {
             const session = await verifySession();
             if (session.status !== 200 || !session.data || !session.data.user || !session.data.user.id) {
                 return { status: 401, data: { message: e("unauthorized") } };
@@ -231,16 +236,16 @@ export async function withAuthorizationRole(
 export async function ISADMIN(id?: string): Promise<{ status: number, data: any }> {
     const e = await getTranslations('Error');
     try {
-        let userId=id;
-        if(!userId){
+        let userId = id;
+        if (!userId) {
             const session = await verifySession();
             if (session.status !== 200 || !session.data || !session.data.user || !session.data.user.id) {
                 return { status: 401, data: { message: e("unauthorized") } };
             }
             userId = session.data.user.id as string;
         }
-        const is_admin = await prisma.user.findUnique({ where: { id: userId} });
-        return { status: 200, data: { is_admin: is_admin?.is_admin?true:false } };
+        const is_admin = await prisma.user.findUnique({ where: { id: userId } });
+        return { status: 200, data: { is_admin: is_admin?.is_admin ? true : false } };
     } catch (error) {
         console.error("An error occurred in ISADMIN");
         return { status: 500, data: { message: e("error") } };

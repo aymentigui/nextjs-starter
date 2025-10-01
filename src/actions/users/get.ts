@@ -205,6 +205,7 @@ export async function getUsersWithIds(userIds: string[]): Promise<{ status: numb
                 username: true,
                 email: true,
                 image_compressed: true,
+                image: true,
                 roles: {
                     where: {
                         role: {
@@ -247,12 +248,42 @@ export async function getUser(userId?: string): Promise<{ status: number, data: 
 
         const id = userId ?? session.data.user.id
 
-        const user = await prisma.user.findUnique({ where: { id } });
+        const user = await prisma.user.findUnique({ 
+            where: { id },
+            select: {
+                id: true,
+                firstname: true,
+                lastname: true,
+                username: true,
+                email: true,
+                image_compressed: true,
+                image: true,
+                roles: {
+                    where: {
+                        role: {
+                            public: true,
+                        },
+                    },
+                    select: {
+                        role: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                    },
+                },
+            },
+         });
         if (!user) {
             return { status: 400, data: { message: e("usernotfound") } };
         }
 
-        return { status: 200, data: user };
+        const formattedUser = {
+            ...user,
+            roles: user.roles.map((role) => role.role.name).join(", "),
+        }
+
+        return { status: 200, data: formattedUser };
     } catch (error) {
         console.error("An error occurred in getUserByid");
         return { status: 500, data: { message: e("error") } };

@@ -224,15 +224,23 @@
     },
     "Permissions": {
         "title": "Permissions",
+
+        "dashboard": "Tableau de bord",
         "dashboard_view": "Vue du tableau de bord",
+
+        "users": "Utilisateurs",
         "users_view": "Vue des utilisateurs",
         "users_create": "Créer des utilisateurs",
         "users_update": "Mettre à jour les utilisateurs",
         "users_delete": "Supprimer les utilisateurs",
+
+        "roles": "Roles",
         "roles_view": "Vue des rôles",
         "roles_create": "Créer des rôles",
         "roles_update": "Mettre à jour les rôles",
         "roles_delete": "Supprimer les rôles",
+
+        "files": "Fichiers",
         "files_view": "Vue des fichiers",
         "files_create": "Créer des fichiers",
         "files_update": "Mettre à jour les fichiers",

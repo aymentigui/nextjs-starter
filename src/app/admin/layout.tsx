@@ -32,7 +32,6 @@ export default async function RootLayout({
             </HeaderAdmin>
             <div className="w-full p-4 flex-grow">
               {children}
-              <AddUpdateUserDialog />
             </div>
           </main>
         </ModalContext>
