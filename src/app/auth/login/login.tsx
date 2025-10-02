@@ -58,6 +58,9 @@ const LoginForm = () => {
             } else if (res.status === 403 && res.data.emailNotVerified) {
                 await SendVerificationCode(values.email);
                 router.push(`/auth/confermation?email=${encodeURIComponent(values.email)}`);
+            } else if (res.status === 423) {
+                // Compte verrouillé
+                toast.error(res.data.message || s("account_locked"));
             } else {
                 toast.error(res.data.message || s("login_error"));
             }

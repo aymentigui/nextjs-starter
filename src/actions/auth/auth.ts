@@ -98,6 +98,9 @@ export async function registerUser(data: any): Promise<AuthResponse> {
 /**
  * Gère la connexion de l'utilisateur avec gestion du 2FA et de la vérification d'email.
  */
+/**
+ * Gère la connexion de l'utilisateur avec gestion du 2FA et de la vérification d'email.
+ */
 export async function loginUser(data: any): Promise<AuthResponse> {
     const u = await getTranslations("Users");
     const s = await getTranslations("System");
@@ -116,12 +119,60 @@ export async function loginUser(data: any): Promise<AuthResponse> {
             }
         });
 
-        if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {
+        if (!user || !user.password) {
             return { status: 401, data: { message: u('invalidcredentials') || 'Invalid credentials' } };
         }
 
+        // Vérifier le verrouillage du compte
+        const lockCheck = await checkAndHandleAccountLock(user);
+        if (lockCheck.isLocked) {
+            return { status: 423, data: { message: lockCheck.message || u("accountlocked") } }; // 423 Locked
+        }
+
+        const isValid = await bcrypt.compare(password, user.password);
+        
+        if (!isValid) {
+            // Incrémenter le compteur d'échecs
+            const updatedFailedAttempts = user.failed_login_attempts + 1;
+            let lockedUntil = null;
+            
+            // Verrouiller après 5 tentatives échouées
+            if (updatedFailedAttempts >= 5) {
+              lockedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+            }
+            
+            await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                failed_login_attempts: updatedFailedAttempts,
+                locked_until: lockedUntil
+              }
+            });
+            
+            const remainingAttempts = 5 - updatedFailedAttempts;
+            let errorMessage = u('invalidcredentials') || 'Invalid credentials';
+            
+            if (lockedUntil) {
+              errorMessage = u('accountlocked') || 'Your account has been locked for 15 minutes due to too many failed attempts.';
+            } else if (remainingAttempts > 0) {
+              errorMessage = `${u('invalidcredentials')} - ${u('remainingattempts')} ${remainingAttempts}`;
+            }
+            
+            return { status: 401, data: { message: errorMessage } };
+        }
+
+        // Réinitialiser le compteur d'échecs en cas de succès
+        if (user.failed_login_attempts > 0) {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    failed_login_attempts: 0,
+                    locked_until: null
+                }
+            });
+        }
+
         if (user.email_verified === null) {
-            // Email non vérifié, renvoyer un flag pour la redirection
             return { status: 403, data: { message: u('emailnotverified') || 'You must verify your email', emailNotVerified: true } };
         }
 
@@ -131,7 +182,7 @@ export async function loginUser(data: any): Promise<AuthResponse> {
                 // Étape 1: 2FA requis, envoi du code et demande de confirmation
                 const tokenResponse = await generateVerificationToken(user.email);
                 await send2FACode({ email: user.email, code: tokenResponse.data.token });
-                return { status: 202, data: { twoFactorConfermation: true, message: s('2fa_code_sent') } }; // 202 Accepted
+                return { status: 202, data: { twoFactorConfermation: true, message: s('2fa_code_sent') } };
             } else {
                 // Étape 2: Vérification du code 2FA
                 const token = await getVerificationTokenByEmail(user.email);
@@ -151,11 +202,15 @@ export async function loginUser(data: any): Promise<AuthResponse> {
 
     } catch (error) {
         console.error("Login error:", error);
-        // Gestion des erreurs de NextAuth ou autres erreurs inattendues
+        
+        // Gestion spécifique du verrouillage de compte
+        if (error instanceof Error && error.message === "ACCOUNT_LOCKED") {
+            return { status: 423, data: { message: u('accountlocked') || 'Your account is temporarily locked. Please try again in 15 minutes.' } };
+        }
+        
         return { status: 500, data: { message: 'An unexpected error occurred during login' } };
     }
 }
-
 /**
  * Confirme l'inscription en vérifiant le code envoyé par email.
  */
@@ -278,3 +333,20 @@ export async function logoutUser(): Promise<AuthResponse> {
         return { status: 500, data: { message: 'An error occurred during logout' } };
     }
 }
+
+
+// Fonction pour vérifier et gérer le verrouillage du compte
+async function checkAndHandleAccountLock(user: any): Promise<{ isLocked: boolean; message?: string }> {
+    const u = await getTranslations("Users");
+    const s = await getTranslations("System");
+
+    if (user.locked_until && new Date(user.locked_until) > new Date()) {
+      const remainingTime = Math.ceil((new Date(user.locked_until).getTime() - Date.now()) / (1000 * 60));
+      return {
+        isLocked: true,
+        message: `${u("accountlocked2")} ${remainingTime} ${s("minutes")}.`
+      };
+    }
+    
+    return { isLocked: false };
+  }

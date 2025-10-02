@@ -71,6 +71,13 @@
         "number": "Number",
         "date": "Date",
         "time": "Time",
+        "secondes": "Secondes",
+        "minutes": "Minutes",
+        "hours": "Hours",
+        "days": "Days",
+        "weeks": "Weeks",
+        "months": "Months",
+        "years": "Years",
         "password": "Password",
         "select": "Select",
         "checkbox": "Checkbox",
@@ -223,7 +230,11 @@
         "selectusers": "Select users",
         "deleteusers": "Delete users",
         "confermationdelete": "Are you absolutely sure?",
-        "confermationdeletemessage": "This action cannot be undone. This will permanently delete your users and remove your data from our servers."
+        "confermationdeletemessage": "This action cannot be undone. This will permanently delete your users and remove your data from our servers.",
+        "invalidcredentials": "Invalid credentials",
+        "accountlocked":"Account temporarily locked due to multiple failed login attempts. Please try again later.",
+        "remainingattempts":"Remaining attempts: ",
+        "accountlocked2": "Your account is temporarily locked. Please try again in "
     },
     "Permissions": {
         "title": "Permissions",

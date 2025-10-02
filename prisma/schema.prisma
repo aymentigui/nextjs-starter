@@ -32,6 +32,8 @@ model user {
   roles                            userrole[]
   is_admin                         Boolean                    @default(false)
   public                           Boolean                    @default(true)
+  failed_login_attempts Int       @default(0)
+  locked_until         DateTime?
   // Optional for WebAuthn support
   // Authenticator                 Authenticator[]
 

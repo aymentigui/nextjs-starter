@@ -74,6 +74,13 @@
         "number": "Nombre",
         "date": "Date",
         "time": "Heure",
+        "secondes": "Secondes",
+        "minutes": "Minutes",
+        "hours": "Heures",
+        "days": "Jours",
+        "weeks": "Semaines",
+        "months": "Mois",
+        "years": "Années",
         "password": "Mot de passe",
         "select": "Sélection",
         "checkbox": "Case à cocher",
@@ -227,7 +234,11 @@
         "selectusers": "Sélectionner des utilisateurs",
         "deleteusers": "Supprimer des utilisateurs",
         "confermationdelete" : "Etes-vous absolument sur?",
-        "confermationdeletemessage" : "Cette action ne peut pas etre annulee. Cela supprimera definitivement vos donnees et supprimera vos donnees de nos serveurs."
+        "confermationdeletemessage" : "Cette action ne peut pas etre annulee. Cela supprimera definitivement vos donnees et supprimera vos donnees de nos serveurs.",
+        "invalidcredentials": "Identifiants invalides",
+        "accountlocked": "Compte verrouillé pour 15 minutes en raison de trop nombreuses tentatives de connexion infructueuses",
+        "remainingattempts": "tentatives restantes : ",
+        "accountlocked2":"Votre compte est temporairement verrouillé. Réessayez dans "
     },
     "Permissions": {
         "title": "Permissions",
