@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { generateToken4Chiffres } from "../util/util-public";
 import { getTranslations } from "next-intl/server";
+
 export async function getVerificationTokenByEmail(email: string) : Promise<{ status: number, data: any }> {
     const e=await getTranslations('Error');
     try {

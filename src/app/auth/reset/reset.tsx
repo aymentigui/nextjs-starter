@@ -31,6 +31,7 @@ const ResetForm = () => {
 
     const u = useTranslations('Users');
     const s = useTranslations('System');
+    const st = useTranslations('Settings');    
     const t = useTranslations('Settings');
 
     // Redirection si email manquant
@@ -65,7 +66,7 @@ const ResetForm = () => {
             router.push('/auth/login');
             return;
         }
-
+    
         setLoading(true);
         
         try {
@@ -87,6 +88,9 @@ const ResetForm = () => {
                     toast.success(s("password_reset_success") || "Mot de passe réinitialisé avec succès");
                     router.push('/auth/login');
                 }
+            } else if (res.status === 429) {
+                // Gestion du blocage
+                toast.error(res.data.message || "Trop de tentatives. Compte bloqué temporairement.");
             } else {
                 toast.error(res.data.message || "Erreur lors de la réinitialisation");
             }
@@ -97,7 +101,7 @@ const ResetForm = () => {
             setLoading(false);
         }
     }
-
+    
     if (!email) {
         return (
             <div className="flex justify-center items-center py-8">
@@ -179,11 +183,11 @@ const ResetForm = () => {
                                 <div className="flex items-center justify-center mb-2">
                                     <Lock className="w-6 h-6 text-green-400 mr-2" />
                                     <h3 className="text-lg font-semibold text-green-400">
-                                        Nouveau mot de passe
+                                        {st("newpassword")}
                                     </h3>
                                 </div>
                                 <p className="text-green-300 text-sm">
-                                    Définissez votre nouveau mot de passe sécurisé
+                                    {st("selectnewpassword")}
                                 </p>
                             </div>
 

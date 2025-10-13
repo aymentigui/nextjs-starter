@@ -10,8 +10,8 @@
         "updatefail": "Mise à jour echoue",
         "deletesuccess": "Suppression avec succès",
         "deletefail": "Suppression echoue",
-        "subscribesuccess" : "Abonnement/Souscription avec succès",
-        "subscribefail" : "Abonnement/Souscription echoue",
+        "subscribesuccess": "Abonnement/Souscription avec succès",
+        "subscribefail": "Abonnement/Souscription echoue",
         "create": "Ajouter",
         "save": "Enregistrer",
         "edit": "Modifier",
@@ -26,12 +26,14 @@
         "login": "Connexion",
         "2fa_required": "La vérification en deux étapes est requise",
         "verificationemailsent": "Email de verification envoyé",
-        "resendthecode":"Renvoyer le code",
+        "resendthecode": "Renvoyer le code",
         "mustwait1minutes": "Vous devez attendre 1 minutes",
         "loginsuccess": "Connexion avec succès",
         "register": "Inscription",
         "registersuccess": "Inscription avec succès",
         "registerorlogin": "Inscrivez-vous ou connectez-vous",
+        "codesent": "Code envoyé avec succès",
+        "emailconfirmed": "Email confirmé avec succès",
         "dashboard": "Tableau de bord",
         "settings": "Paramètres",
         "logout": "Se deconnecter",
@@ -70,7 +72,6 @@
         "other": "Autre",
         "confermationdelete": "Etes-vous absolument sur?",
         "confermationdeletemessage": "Cette action ne peut pas etre annulee. Cela supprimera definitivement vos donnees et supprimera vos donnees de nos serveurs.",
-
         "number": "Nombre",
         "date": "Date",
         "time": "Heure",
@@ -94,7 +95,6 @@
         "email": "Email",
         "phone": "Numéro de téléphone",
         "url": "URL",
-
         "export": "Exporter",
         "exportall": "Exporter tout",
         "exportselected": "Exporter la selection",
@@ -103,7 +103,6 @@
         "exportPDF": "Exporter PDF",
         "exportHTML": "Exporter HTML",
         "exportHTML5": "Exporter HTML5",
-
         "mustrefreshtoseedata": "Veuillez actualiser la page pour voir les nouvelles données.",
         "downloadjustselected": "Télécharger juste la selection",
         "count": "Nombre"
@@ -135,10 +134,19 @@
         "verificationtokennotfound": "Le token de verification n'a pas été trouvé",
         "invalidcode": "Le code fourni est invalide",
         "codeexpired": "Le code fourni a expiré",
+        "invalideorexpiredcode": "Le code fourni est invalide ou a expiré",
         "invalidtoken": "Le token fourni est invalide",
         "tokenexpired": "Le token fourni a expiré",
         "badrequest": "Mauvaise requête",
-        "errorscreating": "Erreur lors de la création"
+        "errorscreating": "Erreur lors de la création",
+        "errorregistering": "Erreur lors de l'inscription",
+        "errorinlogin": "Erreur lors de la connexion",
+        "errorlogout": "Erreur lors de la déconnexion",
+        "errorsendcode": "Erreur lors de l'envoi du code",
+        "errorconfirmation": "Erreur lors de la confirmation",
+        "error2afa": "Erreur lors de la configuration de la vérification en deux étapes",
+        "account_blocked": "Compte bloqué. Réessayez dans {{minutes}} minutes.",
+        "too_many_attempts": "Trop de tentatives. Compte bloqué pour 15 minutes."
     },
     "Settings": {
         "title": "Paramètres",
@@ -157,6 +165,7 @@
         "resetpassword": "Réinitialiser le mot de passe",
         "currentpassword": "Mot de passe actuel",
         "newpassword": "Nouveau mot de passe",
+        "selectnewpassword": "Définissez votre nouveau mot de passe sécurisé",
         "confirmpassword": "Confirmer le mot de passe",
         "codeverification": "Code de vérification",
         "forgetpassword": "Mot de passe oublié ?",
@@ -182,6 +191,19 @@
         "deletesession": "Supprimer la session",
         "deleteallsessions": "Supprimer toutes les sessions",
         "sessionnotfound": "Session introuvable"
+    },
+    "Login": {
+        "verification_pending": "Vérification en attente",
+        "verification_code_sent": "Un code de vérification a été envoyé à :",
+        "attempts_warning": "Tentative {attempts}/3 - Après 3 tentatives, votre compte sera bloqué pendant 15 minutes.",
+        "account_temporarily_blocked": "Compte temporairement bloqué",
+        "too_many_attempts": "Trop de tentatives. Veuillez réessayer dans {minutes} minute(s).",
+        "code_verification": "Code de vérification",
+        "did_not_receive_code": "Vous n'avez pas reçu le code ?",
+        "back_to_login": "← Retour à la connexion",
+        "resend_code": "Renvoyer le code",
+        "blocked": "Bloqué ({minutes}min)",
+        "confirm": "Confirmer"
     },
     "Roles": {
         "title": "Roles",
@@ -230,41 +252,37 @@
         "avatarinvalid": "L'avatar est invalide",
         "imagerequired": "L'image est requise",
         "onlyimagesallowed": "Seuls les images sont autorisées",
-
         "selectusers": "Sélectionner des utilisateurs",
         "deleteusers": "Supprimer des utilisateurs",
-        "confermationdelete" : "Etes-vous absolument sur?",
-        "confermationdeletemessage" : "Cette action ne peut pas etre annulee. Cela supprimera definitivement vos donnees et supprimera vos donnees de nos serveurs.",
+        "confermationdelete": "Etes-vous absolument sur?",
+        "confermationdeletemessage": "Cette action ne peut pas etre annulee. Cela supprimera definitivement vos donnees et supprimera vos donnees de nos serveurs.",
         "invalidcredentials": "Identifiants invalides",
         "accountlocked": "Compte verrouillé pour 15 minutes en raison de trop nombreuses tentatives de connexion infructueuses",
         "remainingattempts": "tentatives restantes : ",
-        "accountlocked2":"Votre compte est temporairement verrouillé. Réessayez dans "
+        "accountlocked2": "Votre compte est temporairement verrouillé. Réessayez dans ",
+        "twofactorblocked": "La vérification 2FA est temporairement bloquée. Veuillez réessayer dans"
     },
     "Permissions": {
         "title": "Permissions",
-
         "dashboard": "Tableau de bord",
         "dashboard_view": "Vue du tableau de bord",
-
         "users": "Utilisateurs",
         "users_view": "Vue des utilisateurs",
         "users_create": "Créer des utilisateurs",
         "users_update": "Mettre à jour les utilisateurs",
         "users_delete": "Supprimer les utilisateurs",
-
         "roles": "Roles",
         "roles_view": "Vue des rôles",
         "roles_create": "Créer des rôles",
         "roles_update": "Mettre à jour les rôles",
         "roles_delete": "Supprimer les rôles",
-
         "files": "Fichiers",
         "files_view": "Vue des fichiers",
         "files_create": "Créer des fichiers",
         "files_update": "Mettre à jour les fichiers",
         "files_delete": "Supprimer les fichiers"
     },
-   "Files": {
+    "Files": {
         "title": "Fichiers",
         "uploadfile": "Télécharger un fichier",
         "deletefile": "Supprimer un fichier",

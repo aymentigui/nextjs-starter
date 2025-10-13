@@ -11,7 +11,7 @@ datasource db {
 }
 
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 model user {
@@ -32,30 +32,35 @@ model user {
   roles                            userrole[]
   is_admin                         Boolean                    @default(false)
   public                           Boolean                    @default(true)
-  failed_login_attempts Int       @default(0)
-  locked_until         DateTime?
+  failed_login_attempts            Int                        @default(0)
+  locked_until                     DateTime?
+  verification_attempts            Int                        @default(0)
+  last_verification_attempt        DateTime?
+  verification_blocked_until       DateTime?
+  two_factor_attempts              Int                        @default(0)
+  last_two_factor_attempt          DateTime?
+  two_factor_blocked_until         DateTime?
   // Optional for WebAuthn support
   // Authenticator                 Authenticator[]
 
   created_at DateTime  @default(now())
   deleted_at DateTime?
-  updated_at DateTime @updatedAt
+  updated_at DateTime  @updatedAt
 }
 
 model session {
-  id           String   @id @default(cuid())
+  id            String   @id @default(cuid())
   session_token String
   user_id       String
-  expires      DateTime
-  user         user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  expires       DateTime
+  user          user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   device_name   String?
   device_type   String?
-  browser      String?
-  os           String?
-  active       Boolean  @default(true)
+  browser       String?
+  os            String?
+  active        Boolean  @default(true)
   created_at    DateTime @default(now())
 }
-
 
 model role {
   id          String     @id @default(cuid())
@@ -74,30 +79,32 @@ model userrole {
 }
 
 model verificationtoken {
-  id        String   @id @default(cuid())
-  email     String
-  token     String
+  id         String   @id @default(cuid())
+  email      String
+  token      String
   expired_at DateTime
 }
 
 model twofactorconfermation {
-  id        String   @id @default(cuid())
+  id         String   @id @default(cuid())
   user_id    String
   expired_at DateTime
-  user      user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id])
 }
 
 model resetpasswordconfermation {
-  id        String   @id @default(cuid())
-  user_id    String
-  expired_at DateTime
-  user      user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id            String    @id @default(cuid())
+  user_id       String
+  expired_at    DateTime
+  attempts      Int       @default(0) // Nombre de tentatives
+  last_attempt  DateTime  @default(now()) // Dernière tentative
+  blocked_until DateTime? // Bloqué jusqu'à cette date
+  user          user      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id])
 }
-
 
 // model Account {
 //   id                       String  @id @default(cuid())
@@ -138,29 +145,28 @@ model resetpasswordconfermation {
 //   @@id([userId, credentialID])
 // }
 
-
 model files {
-    id         String    @id @default(cuid())
-    name       String
-    mime_type  String
-    extention  String
-    size       Int
-    path       String
-    created_at DateTime  @default(now())
-    deleted_at DateTime?
-    added_from String?
+  id         String    @id @default(cuid())
+  name       String
+  mime_type  String
+  extention  String
+  size       Int
+  path       String
+  created_at DateTime  @default(now())
+  deleted_at DateTime?
+  added_from String?
 
-    can_view_permissions     String?
-    can_download_permissions String?
-    can_delete_permissions   String?
+  can_view_permissions     String?
+  can_download_permissions String?
+  can_delete_permissions   String?
 
-    // Définition des permissions spécifiques aux utilisateurs
-    can_view_users     String?
-    can_download_users String?
-    can_delete_users   String?
+  // Définition des permissions spécifiques aux utilisateurs
+  can_view_users     String?
+  can_download_users String?
+  can_delete_users   String?
 
-    // Indicateur si seul l'admin a le contrôle total
-    admin_view_only     Boolean @default(false)
-    admin_download_only Boolean @default(false)
-    admin_delete_only   Boolean @default(false)
+  // Indicateur si seul l'admin a le contrôle total
+  admin_view_only     Boolean @default(false)
+  admin_download_only Boolean @default(false)
+  admin_delete_only   Boolean @default(false)
 }

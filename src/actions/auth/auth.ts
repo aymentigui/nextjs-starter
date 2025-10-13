@@ -55,6 +55,7 @@ const ConfirmationSchema = z.object({
  */
 export async function registerUser(data: any): Promise<AuthResponse> {
     const u = await getTranslations('Users');
+    const e = await getTranslations('Error');
     const result = RegisterSchema(u).safeParse(data);
 
     if (!result.success) {
@@ -84,14 +85,14 @@ export async function registerUser(data: any): Promise<AuthResponse> {
                 password: passwordHash,
             },
         });
-        
+
         // Envoi du code de vérification juste après l'inscription (non bloquant)
         await SendVerificationCode(email);
-        
+
         return { status: 201, data: newUser };
     } catch (error) {
         console.error("Registration error:", error);
-        return { status: 500, data: { message: 'An error occurred during registration' } };
+        return { status: 500, data: { message: e("errorregistering") } };
     }
 }
 
@@ -104,6 +105,7 @@ export async function registerUser(data: any): Promise<AuthResponse> {
 export async function loginUser(data: any): Promise<AuthResponse> {
     const u = await getTranslations("Users");
     const s = await getTranslations("System");
+    const e = await getTranslations("Error");
 
     const result = LoginSchema(u).safeParse(data);
     if (!result.success) {
@@ -123,41 +125,41 @@ export async function loginUser(data: any): Promise<AuthResponse> {
             return { status: 401, data: { message: u('invalidcredentials') || 'Invalid credentials' } };
         }
 
-        // Vérifier le verrouillage du compte
+        // Vérifier le verrouillage du compte principal
         const lockCheck = await checkAndHandleAccountLock(user);
         if (lockCheck.isLocked) {
-            return { status: 423, data: { message: lockCheck.message || u("accountlocked") } }; // 423 Locked
+            return { status: 423, data: { message: lockCheck.message || u("accountlocked") } };
         }
 
         const isValid = await bcrypt.compare(password, user.password);
-        
+
         if (!isValid) {
             // Incrémenter le compteur d'échecs
             const updatedFailedAttempts = user.failed_login_attempts + 1;
             let lockedUntil = null;
-            
+
             // Verrouiller après 5 tentatives échouées
             if (updatedFailedAttempts >= 5) {
-              lockedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+                lockedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
             }
-            
+
             await prisma.user.update({
-              where: { id: user.id },
-              data: {
-                failed_login_attempts: updatedFailedAttempts,
-                locked_until: lockedUntil
-              }
+                where: { id: user.id },
+                data: {
+                    failed_login_attempts: updatedFailedAttempts,
+                    locked_until: lockedUntil
+                }
             });
-            
+
             const remainingAttempts = 5 - updatedFailedAttempts;
             let errorMessage = u('invalidcredentials') || 'Invalid credentials';
-            
+
             if (lockedUntil) {
-              errorMessage = u('accountlocked') || 'Your account has been locked for 15 minutes due to too many failed attempts.';
+                errorMessage = u('accountlocked') || 'Your account has been locked for 15 minutes due to too many failed attempts.';
             } else if (remainingAttempts > 0) {
-              errorMessage = `${u('invalidcredentials')} - ${u('remainingattempts')} ${remainingAttempts}`;
+                errorMessage = `${u('invalidcredentials')} - ${u('remainingattempts')} ${remainingAttempts}`;
             }
-            
+
             return { status: 401, data: { message: errorMessage } };
         }
 
@@ -178,6 +180,12 @@ export async function loginUser(data: any): Promise<AuthResponse> {
 
         // --- Logique 2FA ---
         if (user.is_two_factor_enabled && user.email) {
+            // Vérifier le blocage 2FA avant de procéder
+            const twoFALockCheck = await checkAndHandle2FALock(user);
+            if (twoFALockCheck.isLocked) {
+                return { status: 429, data: { message: twoFALockCheck.message || u("twofactorblocked") } };
+            }
+
             if (!code) {
                 // Étape 1: 2FA requis, envoi du code et demande de confirmation
                 const tokenResponse = await generateVerificationToken(user.email);
@@ -186,13 +194,52 @@ export async function loginUser(data: any): Promise<AuthResponse> {
             } else {
                 // Étape 2: Vérification du code 2FA
                 const token = await getVerificationTokenByEmail(user.email);
+
                 
                 if (token.status !== 200 || !token.data || token.data.token !== code || new Date(token.data.expiredAt) < new Date()) {
-                    return { status: 401, data: { message: s('invalid_or_expired_code') || 'Invalid or expired code' } };
+                    // Incrémenter le compteur de tentatives 2FA
+                    const updatedTwoFactorAttempts = (user.two_factor_attempts || 0) + 1;
+                    let twoFactorBlockedUntil = null;
+
+                    // Bloquer après 3 tentatives échouées
+                    if (updatedTwoFactorAttempts >= 3) {
+                        twoFactorBlockedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+                    }
+
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: {
+                            two_factor_attempts: updatedTwoFactorAttempts,
+                            two_factor_blocked_until: twoFactorBlockedUntil,
+                            last_two_factor_attempt: new Date()
+                        }
+                    });
+
+                    const remainingAttempts = 3 - updatedTwoFactorAttempts;
+                    let errorMessage = e('invalideorexpiredcode') || 'Invalid or expired code';
+
+                    if (twoFactorBlockedUntil) {
+                        errorMessage = u('twofactorblocked') || '2FA verification blocked for 15 minutes due to too many failed attempts.';
+                    } else if (remainingAttempts > 0) {
+                        errorMessage = `${e('invalideorexpiredcode')} - ${u('remainingattempts')} ${remainingAttempts}`;
+                    }
+
+                    return { status: 401, data: { message: errorMessage } };
+                }
+
+                // Réinitialiser le compteur 2FA en cas de succès
+                if (user.two_factor_attempts > 0) {
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: {
+                            two_factor_attempts: 0,
+                            two_factor_blocked_until: null
+                        }
+                    });
                 }
                 
                 await deleteVerificationTokenByEmail(user.email);
-                await createTowFactorConfermation(user.id); 
+                await createTowFactorConfermation(user.id);
             }
         }
 
@@ -202,13 +249,13 @@ export async function loginUser(data: any): Promise<AuthResponse> {
 
     } catch (error) {
         console.error("Login error:", error);
-        
+
         // Gestion spécifique du verrouillage de compte
         if (error instanceof Error && error.message === "ACCOUNT_LOCKED") {
             return { status: 423, data: { message: u('accountlocked') || 'Your account is temporarily locked. Please try again in 15 minutes.' } };
         }
-        
-        return { status: 500, data: { message: 'An unexpected error occurred during login' } };
+
+        return { status: 500, data: { message: e("errorinlogin") } };
     }
 }
 /**
@@ -216,6 +263,8 @@ export async function loginUser(data: any): Promise<AuthResponse> {
  */
 export async function confermationRegister(data: any, email: string): Promise<AuthResponse> {
     const result = ConfirmationSchema.safeParse(data);
+    const s = await getTranslations('System');
+    const e = await getTranslations('Error');
 
     if (!result.success) {
         return { status: 400, data: result.error.errors };
@@ -228,25 +277,45 @@ export async function confermationRegister(data: any, email: string): Promise<Au
         });
 
         if (!user) {
-            return { status: 404, data: { message: 'User not found' } };
+            return { status: 404, data: { message: e("usernotfound") } };
+        }
+
+        // Vérifier si l'utilisateur est bloqué pour la vérification
+        if (user.verification_blocked_until && new Date(user.verification_blocked_until) > new Date()) {
+            const blockedUntil = new Date(user.verification_blocked_until);
+            const now = new Date();
+            const minutesLeft = Math.ceil((blockedUntil.getTime() - now.getTime()) / (1000 * 60));
+
+            return {
+                status: 429,
+                data: {
+                    message: `${s("accountlocked2")} ${minutesLeft} ${s("minutes")}.`
+                }
+            };
         }
 
         const token = await getVerificationTokenByEmail(email);
         if (token.status !== 200 || !token.data || token.data.token !== code || new Date(token.data.expiredAt) < new Date()) {
-            return { status: 400, data: { message: 'Invalid or expired code' } };
+            return { status: 400, data: { message: e("invalideorexpiredcode") } };
         }
-        
+
         await deleteVerificationTokenByEmail(email);
+        // Mettre à jour l'utilisateur et réinitialiser le compteur
         await prisma.user.update({
             where: { id: user.id },
-            data: { email_verified: new Date() }
+            data: {
+                email_verified: new Date(),
+                verification_attempts: 0,
+                last_verification_attempt: null,
+                verification_blocked_until: null
+            }
         });
 
-        return { status: 200, data: { message: 'Email confirmed successfully' } };
+        return { status: 200, data: { message: s("emailconfirmed") } };
 
     } catch (error) {
         console.error("Confirmation error:", error);
-        return { status: 500, data: { message: 'An error occurred during confirmation' } };
+        return { status: 500, data: { message: e("errorconfirmation") } };
     }
 }
 
@@ -259,25 +328,81 @@ export async function confermationRegister(data: any, email: string): Promise<Au
  */
 export const SendVerificationCode = async (email: string): Promise<AuthResponse> => {
     const s = await getTranslations('System');
-    
+    const e = await getTranslations('Error');
+    const u = await getTranslations('Users');
+
     try {
+        const user = await prisma.user.findFirst({
+            where: {
+                email,
+                deleted_at: null
+            }
+        });
+
+        if (!user) {
+            return { status: 404, data: { message: e("usernotfound") } };
+        }
+
+        // Vérifier si l'utilisateur est bloqué
+        if (user.verification_blocked_until && new Date(user.verification_blocked_until) > new Date()) {
+            const blockedUntil = new Date(user.verification_blocked_until);
+            const now = new Date();
+            const minutesLeft = Math.ceil((blockedUntil.getTime() - now.getTime()) / (1000 * 60));
+
+            return {
+                status: 429,
+                data: {
+                    message: `${s("accountlocked2")} ${minutesLeft} ${s("minutes")}.`
+                }
+            };
+        }
+
         const tokenExisting = await getVerificationTokenByEmail(email);
         // Si un token existe et a été créé il y a moins d'une minute, empêcher le renvoi
         if (tokenExisting.status === 200 && tokenExisting.data) {
-            const oneMinuteAgo = new Date(Date.now() - 1000 * 60); 
+            const oneMinuteAgo = new Date(Date.now() - 1000 * 60);
             if (new Date(tokenExisting.data.createdAt) > oneMinuteAgo) {
                 return { status: 429, data: { message: s("mustwait1minutes") } }; // 429 Too Many Requests
             }
             await deleteVerificationTokenByEmail(email);
         }
 
+        // Incrémenter le compteur de tentatives
+        const fifteenMinutesFromNow = new Date(Date.now() + 15 * 60 * 1000);
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                verification_attempts: user.verification_attempts + 1,
+                last_verification_attempt: new Date(),
+                verification_blocked_until: user.verification_attempts + 1 >= 3 ? fifteenMinutesFromNow : null
+            }
+        });
+
+        // Si c'est la 3ème tentative, bloquer l'utilisateur
+        if (user.verification_attempts + 1 >= 3) {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    verification_blocked_until: fifteenMinutesFromNow
+                }
+            });
+
+            return {
+                status: 429,
+                data: {
+                    message: u("accountlocked")
+                }
+            };
+        }
+
         // Création d'un nouveau token (expiration par défaut, e.g., 1 heure)
-        const token = await generateVerificationToken(email, 1); 
+        const token = await generateVerificationToken(email, 1);
         await sendCode({ email, code: token.data.token });
-        return { status: 200, data: { message: 'Code sent successfully' } };
+        return { status: 200, data: { message: s("codesent") } };
     } catch (error) {
         console.error("Error sending verification code:", error);
-        return { status: 500, data: { message: 'An error occurred while sending the code' } };
+        return { status: 500, data: { message: e("errorsendcode") } };
     }
 };
 
@@ -286,8 +411,27 @@ export const SendVerificationCode = async (email: string): Promise<AuthResponse>
  */
 export const SendVerificationCode2FA = async (email: string): Promise<AuthResponse> => {
     const s = await getTranslations('System');
-    
+    const e = await getTranslations('Error');
+    const u = await getTranslations('Users');
+
     try {
+        const user = await prisma.user.findFirst({
+            where: {
+                email,
+                deleted_at: null
+            }
+        });
+
+        if (!user) {
+            return { status: 404, data: { message: e("usernotfound") } };
+        }
+
+        // Vérifier le blocage 2FA
+        const twoFALockCheck = await checkAndHandle2FALock(user);
+        if (twoFALockCheck.isLocked) {
+            return { status: 429, data: { message: twoFALockCheck.message || u("twofactorblocked") } };
+        }
+
         const tokenExisting = await getVerificationTokenByEmail(email);
         // Si un token existe et a été créé il y a moins d'une minute, empêcher le renvoi
         if (tokenExisting.status === 200 && tokenExisting.data) {
@@ -295,16 +439,17 @@ export const SendVerificationCode2FA = async (email: string): Promise<AuthRespon
             if (new Date(tokenExisting.data.createdAt) > oneMinuteAgo) {
                 return { status: 429, data: { message: s("mustwait1minutes") } };
             }
-             await deleteVerificationTokenByEmail(email);
+            await deleteVerificationTokenByEmail(email);
         }
-        
-        // Création d'un nouveau token (expiration plus courte pour 2FA)
-        const token = await generateVerificationToken(email, 1); // Utilisation de '1' heure comme exemple
+
+        // Création d'un nouveau token
+        const token = await generateVerificationToken(email, 1);
         await send2FACode({ email, code: token.data.token });
-        return { status: 200, data: { message: 'Code sent successfully' } };
+        return { status: 200, data: { message: s("codesent") } };
+
     } catch (error) {
         console.error("Error sending 2FA code:", error);
-        return { status: 500, data: { message: 'An error occurred while sending the 2FA code' } };
+        return { status: 500, data: { message: e("error2afa") } };
     }
 };
 
@@ -316,21 +461,22 @@ export const SendVerificationCode2FA = async (email: string): Promise<AuthRespon
  * Gère la déconnexion de l'utilisateur et met à jour l'état de la session dans la BDD.
  */
 export async function logoutUser(): Promise<AuthResponse> {
+    const e = await getTranslations("Error");
     try {
         const session = await verifySession(); // Fonction pour vérifier la session actuelle
-        
+
         if (session.status === 200 && session.data && session.data.session && session.data.session.id) {
             await prisma.session.update({
                 where: { id: session.data.session.id },
                 data: { active: false }
             });
         }
-        
+
         await signOut({ redirect: false });
         return { status: 200, data: { message: 'Logout successful' } };
     } catch (error) {
         console.error("An error occurred in logout:", error);
-        return { status: 500, data: { message: 'An error occurred during logout' } };
+        return { status: 500, data: { message: e("errorlogout") } };
     }
 }
 
@@ -341,12 +487,28 @@ async function checkAndHandleAccountLock(user: any): Promise<{ isLocked: boolean
     const s = await getTranslations("System");
 
     if (user.locked_until && new Date(user.locked_until) > new Date()) {
-      const remainingTime = Math.ceil((new Date(user.locked_until).getTime() - Date.now()) / (1000 * 60));
-      return {
-        isLocked: true,
-        message: `${u("accountlocked2")} ${remainingTime} ${s("minutes")}.`
-      };
+        const remainingTime = Math.ceil((new Date(user.locked_until).getTime() - Date.now()) / (1000 * 60));
+        return {
+            isLocked: true,
+            message: `${u("accountlocked2")} ${remainingTime} ${s("minutes")}.`
+        };
     }
-    
+
     return { isLocked: false };
-  }
+}
+
+// Fonction pour vérifier et gérer le blocage 2FA
+async function checkAndHandle2FALock(user: any): Promise<{ isLocked: boolean; message?: string }> {
+    const u = await getTranslations("Users");
+    const s = await getTranslations("System");
+
+    if (user.two_factor_blocked_until && new Date(user.two_factor_blocked_until) > new Date()) {
+        const remainingTime = Math.ceil((new Date(user.two_factor_blocked_until).getTime() - Date.now()) / (1000 * 60));
+        return {
+            isLocked: true,
+            message: `${u("twofactorblocked")} ${remainingTime} ${s("minutes")}.`
+        };
+    }
+
+    return { isLocked: false };
+}

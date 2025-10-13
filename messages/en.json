@@ -32,6 +32,8 @@
         "register": "Register",
         "registersuccess": "Register success",
         "registerorlogin": "Register or Login",
+        "codesent": "Code sent successfully to your email",
+        "emailconfirmed": "Email confirmed successfully",
         "dashboard": "Dashboard",
         "settings": "Settings",
         "logout": "Logout",
@@ -132,10 +134,19 @@
         "verificationtokennotfound": "Verification token not found",
         "invalidcode": "Invalid code",
         "codeexpired": "Code expired",
+        "invalideorexpiredcode": "Invalid or expired code",
         "invalidtoken": "Invalid token",
         "tokenexpired": "Token expired",
         "badrequest": "Bad request",
-        "errorscreating": "Error creating"
+        "errorscreating": "Error creating",
+        "errorregistering": "Error registering",
+        "errorinlogin": "An unexpected error occurred during login",
+        "errorlogout": "An unexpected error occurred during logout",
+        "errorsendcode": "An error occurred while sending the code",
+        "errorconfirmation": "An error occurred during confirmation",
+        "error2afa": "An error occurred during two factor authentication",
+        "account_blocked": "Account blocked. Please try again in {{minutes}} minutes.",
+        "too_many_attempts": "Too many attempts. Account blocked for 15 minutes."
     },
     "Settings": {
         "title": "Settings",
@@ -154,6 +165,7 @@
         "resetpassword": "Reset Password",
         "currentpassword": "Current Password",
         "newpassword": "New Password",
+        "selectnewpassword": "Select a new password for your account",
         "confirmpassword": "Confirm Password",
         "codeverification": "Verification code",
         "forgetpassword": "Forget Password ?",
@@ -179,6 +191,19 @@
         "deletesession": "Delete Session",
         "deleteallsessions": "Delete All Sessions",
         "sessionnotfound": "Session not found"
+    },
+    "Login": {
+        "verification_pending": "Verification Pending",
+        "verification_code_sent": "A verification code has been sent to:",
+        "attempts_warning": "Attempt {attempts}/3 - After 3 attempts, your account will be blocked for 15 minutes.",
+        "account_temporarily_blocked": "Account Temporarily Blocked",
+        "too_many_attempts": "Too many attempts. Please try again in {minutes} minute(s).",
+        "code_verification": "Verification Code",
+        "did_not_receive_code": "Didn't receive the code?",
+        "back_to_login": "← Back to login",
+        "resend_code": "Resend code",
+        "blocked": "Blocked ({minutes}min)",
+        "confirm": "Confirm"
     },
     "Roles": {
         "title": "Roles",
@@ -232,27 +257,25 @@
         "confermationdelete": "Are you absolutely sure?",
         "confermationdeletemessage": "This action cannot be undone. This will permanently delete your users and remove your data from our servers.",
         "invalidcredentials": "Invalid credentials",
-        "accountlocked":"Account temporarily locked due to multiple failed login attempts. Please try again later.",
-        "remainingattempts":"Remaining attempts: ",
-        "accountlocked2": "Your account is temporarily locked. Please try again in "
+        "accountlocked": "Account temporarily locked due to multiple failed login attempts. Please try again later.",
+        "remainingattempts": "Remaining attempts: ",
+        "accountlocked2": "Your account is temporarily locked. Please try again in ",
+        "twofactorblocked": "Too many incorrect attempts. Two Factor Authentication is temporarily blocked. Please try again later."
     },
     "Permissions": {
         "title": "Permissions",
         "dashboard": "Dashboard",
         "dashboard_view": "Dashboard View",
-
         "users": "Users",
         "users_view": "Users View",
         "users_create": "Users Create",
         "users_update": "Users Update",
         "users_delete": "Users Delete",
-
         "roles": "Roles",
         "roles_view": "Roles View",
         "roles_create": "Roles Create",
         "roles_update": "Roles Update",
         "roles_delete": "Roles Delete",
-
         "files": "Files",
         "files_view": "Files View",
         "files_create": "Files Create",

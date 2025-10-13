@@ -32,6 +32,8 @@
         "register": "تسجيل جديد",
         "registersuccess": "تم التسجيل بنجاح",
         "registerorlogin": "تسجيل جديد/تسجيل الدخول",
+        "codesent": "تم ارسال الكود الى بريدك الإلكتروني",
+        "emailconfirmed": "تم تأكيد البريد الإلكتروني",
         "dashboard": "لوحة التحكم",
         "settings": "الإعدادات",
         "logout": "تسجيل الخروج",
@@ -132,10 +134,19 @@
         "verificationtokennotfound": "لم يتم العثور على رمز التحقق",
         "invalidcode": "رمز غير صحيح",
         "codeexpired": "انتهت صلاحية الرمز",
+        "invalideorexpiredcode": "رمز غير صحيح أو انتهت صلاحيته",
         "invalidtoken": "رمز غير صحيح",
         "tokenexpired": "انتهت صلاحية الرمز",
         "badrequest": "طلب غير صالح",
-        "errorscreating": "خطأ في انشاء"
+        "errorscreating": "خطأ في انشاء",
+        "errorregistering": "خطأ في التسجيل",
+        "errorinlogin":"خطأ في تسجيل الدخول",
+        "errorlogout":"خطأ في تسجيل الخروج",
+        "errorsendcode":"خطأ في ارسال الكود",
+        "errorconfirmation":"خطأ في التأكيد",
+        "error2afa":"خطأ في التوثيق بخطوتين",
+        "account_blocked": "تم حظر الحساب. يرجى المحاولة مرة أخرى بعد {{minutes}} دقيقة.",
+        "too_many_attempts": "محاولات كثيرة جدًا. تم حظر الحساب لمدة 15 دقيقة."
     },
     "Settings": {
         "title": "الإعدادات",
@@ -154,6 +165,7 @@
         "resetpassword": "إعادة تعيين كلمة المرور",
         "currentpassword": "كلمة المرور الحالية",
         "newpassword": "كلمة المرور الجديدة",
+        "selectnewpassword": "اختر كلمة مرور جديدة",
         "confirmpassword": "تأكيد كلمة المرور",
         "codeverification": "رمز التحقق",
         "forgetpassword": "هل نسيت كلمة المرور ؟",
@@ -180,6 +192,19 @@
         "deleteallsessions": "حذف جميع الجلسات",
         "sessionnotfound": "الجلسة غير موجودة"
     },
+    "Login": {
+        "verification_pending": "في انتظار التحقق",
+        "verification_code_sent": "تم إرسال رمز التحقق إلى:",
+        "attempts_warning": "محاولة {attempts}/3 - بعد 3 محاولات، سيتم حظر حسابك لمدة 15 دقيقة.",
+        "account_temporarily_blocked": "الحساب مؤقتًا محظور",
+        "too_many_attempts": "محاولات كثيرة جدًا. يرجى المحاولة مرة أخرى بعد {minutes} دقيقة.",
+        "code_verification": "رمز التحقق",
+        "did_not_receive_code": "لم تستلم الرمز؟",
+        "back_to_login": "← العودة إلى تسجيل الدخول",
+        "resend_code": "إعادة إرسال الرمز",
+        "blocked": "محظور ({minutes}دقيقة)",
+        "confirm": "تأكيد"
+      },
     "Roles": {
         "title": "الادوار",
         "name": "الاسم",
@@ -234,7 +259,8 @@
         "invalidcredentials": "بيانات اعتماد غير صالحة",
         "accountlocked": "تم قفل الحساب بعد عدة محاولات تسجيل دخول فاشلة. يرجى المحاولة مرة أخرى بعد 15 دقيقة.",
         "remainingattempts": "المحاولات المتبقية: ",
-        "accountlocked2": "تم قفل حسابك مؤقتًا. يرجى المحاولة مرة أخرى بعد "
+        "accountlocked2": "تم قفل حسابك مؤقتًا. يرجى المحاولة مرة أخرى بعد ",
+        "twofactorblocked": "تم قفل التوثيق بخطوتين مؤقتًا. يرجى المحاولة مرة أخرى بعد "
     },
     "Permissions": {
         "title": "الصلاحيات",

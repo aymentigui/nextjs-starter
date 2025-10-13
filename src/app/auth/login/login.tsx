@@ -106,6 +106,8 @@ const LoginForm = () => {
             const res = await SendVerificationCode2FA(email);
             if (res.status === 200) {
                 toast.success(s("verificationemailsent"));
+            } else if (res.status === 429) {
+                toast.error(res.data.message || s("twofactorblocked"));
             } else {
                 toast.error(res.data.message || s("resend_code_error"));
             }
