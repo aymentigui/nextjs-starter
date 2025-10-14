@@ -6,89 +6,119 @@ import fs from "fs";
 import path from "path";
 import { deleteFile } from "@/actions/localstorage/delete";
 
-export async function GET(request: Request, { params }: { params: any }) {
+const deleteFileFromDB = async (id: string) => {
+    const deletedFile = await prisma.files.delete({ where: { id } });
+    deleteFile(id);
+    return deletedFile
+}
 
-    const paramsID = await params
+/**
+ * Utilitaire pour renvoyer une réponse JSON standardisée
+ */
+function jsonResponse(message: string, status = 200) {
+    return NextResponse.json({ message }, { status });
+}
+
+/**
+ * Utilitaire pour créer un stream de fichier et le retourner sous forme de Response
+ */
+async function createFileResponse(filePath: string, mimeType: string, metadata: any) {
+    const fullPath = path.join(process.cwd(), filePath);
+
+    if (!fs.existsSync(fullPath)) {
+        return jsonResponse("File not found in storage", 200);
+    }
+
+    const fileStream = fs.createReadStream(fullPath);
+    const readableStream = new ReadableStream({
+        start(controller) {
+            fileStream.on("data", (chunk) => controller.enqueue(chunk));
+            fileStream.on("end", () => controller.close());
+            fileStream.on("error", (err) => controller.error(err));
+        },
+    });
+
+    return new Response(readableStream, {
+        headers: {
+            "Content-Type": mimeType,
+            "X-File-Metadata": JSON.stringify(metadata),
+        },
+    });
+}
+
+/**
+ * Endpoint GET principal
+ */
+export async function GET(request: Request, { params }: { params: any }) {
+    const { id } = params;
     const url = new URL(request.url);
     const allFile = url.searchParams.get("allFile");
 
-    const f = await getTranslations('Files');
-    const e = await getTranslations('Error');
+    const f = await getTranslations("Files");
+    const e = await getTranslations("Error");
 
-    const fileexists = await prisma.files.findFirst({ where: { id: paramsID.id } });
+    const fileexists = await prisma.files.findFirst({ where: { id } });
 
     if (!fileexists) {
-        return NextResponse.json(fileexists);
+        return jsonResponse(e("not_found"), 404);
     }
 
-    if (fileexists?.can_view_users || fileexists?.admin_view_only || fileexists?.can_view_permissions) {
+    // 🔒 Gestion des permissions
+    if (fileexists.can_view_users || fileexists.admin_view_only || fileexists.can_view_permissions) {
         const session = await verifySession();
-        let havePermission = false
-        if (session.status !== 200 || !session.data || !session.data.user) {
-            return NextResponse.json({ message: e("unauthorized") }, { status: 401 });
+        let havePermission = false;
+
+        // Vérification session
+        if (session.status !== 200 || !session.data?.user) {
+            return jsonResponse(e("unauthorized"), 401);
         }
-        if(session.data.user.is_admin === true) {
-            havePermission = true
+
+        const user = session.data.user;
+
+        // Si admin, autorisé
+        if (user.is_admin) havePermission = true;
+
+        // Fichiers réservés à l'admin
+        if (!havePermission && fileexists.admin_view_only) {
+            if (fileexists.admin_view_only !== user.id) {
+                return jsonResponse(f("unauthorized"), 401);
+            }
+            havePermission = true;
         }
-        if (fileexists.admin_view_only) {
-            if (session.data.user.is_admin === false && fileexists.admin_view_only !== session.data.user.id) {
-                return NextResponse.json({ message: f("unauthorized") }, { status: 401 });
-            } else {
-                havePermission = true
+
+        // Liste des utilisateurs autorisés
+        if (!havePermission && fileexists.can_view_users) {
+            const allowedUsers = fileexists.can_view_users.split(",");
+            if (allowedUsers.includes(user.id)) {
+                havePermission = true;
             }
         }
-        if (fileexists.can_view_users && !havePermission) {
-            const users = fileexists.can_view_users.split(',')
-            if (!users.includes(session.data.user.id)) {
-                return NextResponse.json({ message: f("unauthorized") }, { status: 401 });
-            } else {
-                havePermission = true
+
+        // Permissions spécifiques
+        if (!havePermission && fileexists.can_view_permissions) {
+            const requiredPermissions = fileexists.can_view_permissions.split(",");
+            const hasPermission = await withAuthorizationPermission(requiredPermissions, user.id);
+
+            if (hasPermission.status === 200 && hasPermission.data?.hasPermission) {
+                havePermission = true;
             }
         }
-        if (fileexists.can_view_permissions && !havePermission) {
-            const permissions = fileexists.can_view_permissions.split(',')
-            const hasPermission = await withAuthorizationPermission(permissions, session.data.user.id);
-            if (hasPermission.status !== 200 || !hasPermission.data.hasPermission) {
-                return NextResponse.json({ message: f("unauthorized") }, { status: 401 });
-            }
+        
+        if (!havePermission) {
+            return jsonResponse(f("unauthorized"), 401);
         }
     }
 
+    // 🔄 Si on demande le fichier complet
     if (allFile === "true") {
         try {
-            // Définition du chemin du fichier
-            const filePath = path.join(process.cwd(), fileexists.path);
-
-            // Vérifier si le fichier existe
-            if (!fs.existsSync(filePath)) {
-                return NextResponse.json({ error: "File not found in storage" }, { status: 200 });
-            }
-
-            // Création du stream de lecture
-            const fileStream = fs.createReadStream(filePath);
-
-            // Adapter ReadStream en ReadableStream
-            const readableStream = new ReadableStream({
-                start(controller) {
-                    fileStream.on("data", (chunk) => controller.enqueue(chunk));
-                    fileStream.on("end", () => controller.close());
-                    fileStream.on("error", (err) => controller.error(err));
-                },
-            });
-
-
-            // Retourner la réponse avec le stream
-            return new Response(readableStream, {
-                headers: {
-                    "Content-Type": fileexists.mime_type,
-                    "X-File-Metadata": JSON.stringify(fileexists),
-                },
-            });
+            return await createFileResponse(fileexists.path, fileexists.mime_type, fileexists);
         } catch (error) {
-            return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+            console.error("File stream error:", error);
+            return jsonResponse("Internal Server Error", 500);
         }
     }
-
+    // ✅ Sinon, on renvoie les métadonnées
     return NextResponse.json({ data: fileexists }, { status: 200 });
 }
 
@@ -106,39 +136,44 @@ export async function DELETE(request: Request, { params }: { params: any }) {
     }
 
     const session = await verifySession();
-    let havePermission = false
     if (session.status !== 200 || !session.data || !session.data.user) {
         return NextResponse.json({ message: f("unauthorized") }, { status: 401 });
     }
-    if(session.data.user.is_admin === true) {
-        havePermission = true
+
+    if (session.data.user.is_admin === true) {
+        const deletedFile = await deleteFileFromDB(paramsID.id)
+        return NextResponse.json({ data: deletedFile }, { status: 200 });
     }
-    if (!havePermission && fileexist.admin_delete_only && fileexist.added_from !== session.data.user.id) {
-        if (session.data.user.is_admin === false) {
+
+    // si le fichier est pour admin uniquement ou l'utilisateur n'est pas celui qui l'a ajouté
+    if (fileexist.admin_delete_only) {
+        if (fileexist.added_from !== session.data.user.id) {
             return NextResponse.json({ message: f("unauthorized") }, { status: 401 });
         } else {
-            havePermission = true
+            const deletedFile = await deleteFileFromDB(paramsID.id)
+            return NextResponse.json({ data: deletedFile }, { status: 200 });
         }
     }
-    if (fileexist.can_delete_users && !havePermission) {
+
+
+    if (fileexist.can_delete_users) {
         const users = fileexist.can_delete_users.split(',')
-        if (!users.includes(session.data.user.id) && fileexist.added_from !== session.data.user.id) {
-            return NextResponse.json({ message: f("unauthorized") }, { status: 401 });
-        } else {
-            havePermission = true
+        if (users.includes(session.data.user.id)) {
+            const deletedFile = await deleteFileFromDB(paramsID.id)
+            return NextResponse.json({ data: deletedFile }, { status: 200 });
         }
     }
-    if (fileexist.can_delete_permissions && !havePermission) {
+
+    if (fileexist.can_delete_permissions) {
         const permissions = fileexist.can_delete_permissions.split(',')
         const hasPermission = await withAuthorizationPermission(permissions, session.data.user.id);
-        if (hasPermission.status !== 200 || !hasPermission.data.hasPermission) {
-            return NextResponse.json({ message: f("unauthorized") }, { status: 401 });
+        if (hasPermission.status === 200 && hasPermission.data.hasPermission) {
+            const deletedFile = await deleteFileFromDB(paramsID.id)
+            return NextResponse.json({ data: deletedFile }, { status: 200 });
         }
     }
 
-    const deletedFile = await prisma.files.delete({ where: { id: paramsID.id } });
-    deleteFile(paramsID.id);
-
-    return NextResponse.json({ data: deletedFile }, { status: 200 });
+    return NextResponse.json({ message: f("unauthorized") }, { status: 401 });
 
 }
+
